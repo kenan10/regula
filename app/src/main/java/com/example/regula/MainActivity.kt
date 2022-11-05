@@ -28,15 +28,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val viewModel: MainViewModel = hiltViewModel()
+                    val viewModel = hiltViewModel<MainViewModel>()
                     val activity = LocalContext.current as Activity
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
                     PermissionsRequest()
                     CameraPreview()
                     Column {
-                        Text(text = viewModel.uiState.accelerometerValue.toString())
-                        Text(text = viewModel.uiState.magnetometerValue.toString())
+                        Text(text = viewModel.accelerometerValue.toString())
+                        Text(text = viewModel.magnetometerValue.toString())
                     }
                 }
             }

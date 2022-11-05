@@ -8,6 +8,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -15,12 +16,14 @@ import javax.inject.Singleton
 object SensorModule {
     @Provides
     @Singleton
+    @Named("accelerometer")
     fun provideAccelerometer(app: Application): MeasurableSensor {
         return Accelerometer(app)
     }
 
     @Provides
     @Singleton
+    @Named("magnetometer")
     fun provideMagnetometer(app: Application): MeasurableSensor {
         return Magnetometer(app)
     }

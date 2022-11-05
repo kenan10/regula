@@ -9,7 +9,7 @@ class Accelerometer(
 ): AndroidSensor(
     context = context,
     sensorFeature = PackageManager.FEATURE_SENSOR_ACCELEROMETER,
-    sensorType = Sensor.TYPE_LIGHT
+    sensorType = Sensor.TYPE_ACCELEROMETER
 )
 
 class Magnetometer(
