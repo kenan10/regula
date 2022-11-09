@@ -5,11 +5,14 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,15 +38,89 @@ class MainActivity : ComponentActivity() {
 
                     PermissionsRequest()
                     CameraPreview()
-                    Row(
-                        modifier = Modifier.padding(Dp(7f)),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Column(
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.padding(Dp(7f), Dp(5f))
                     ) {
-                        Column {
-                            Text(text = viewModel.accelerometerValue)
-                            Text(text = viewModel.magnetometerValue)
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column {
+                                Text(
+                                    text = viewModel.accelerometerShowedValue
+                                )
+                                Text(
+                                    text = viewModel.magnetometerShowedValue
+                                )
+                            }
+                            ReadinessIndicator(
+                                isReady = viewModel.isReady,
+                                modifier = Modifier.height(Dp(25f)).width(Dp(25f))
+                            )
                         }
-                        ReadinessIndicator(viewModel.isReady)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                modifier = Modifier.background(Color.White),
+                                text = viewModel.currentPointName
+                            )
+                        }
+                        Button(onClick = {
+                            if (viewModel.isReady) viewModel.isDialogOpened = true
+                        }) {
+                            Text(text = "Save current point")
+                        }
+                    }
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val canvasWidth = size.width
+                        val canvasHeight = size.height
+
+                        drawLine(
+                            start = Offset(x = canvasWidth / 2, y = 0f),
+                            end = Offset(x = canvasWidth / 2, y = canvasHeight),
+                            color = Color.Red,
+                            strokeWidth = 5f
+                        )
+                        drawLine(
+                            start = Offset(x = 0f, y = canvasHeight / 2),
+                            end = Offset(x = canvasWidth, y = canvasHeight / 2),
+                            color = Color.Red,
+                            strokeWidth = 5f
+                        )
+                    }
+                    if (viewModel.isDialogOpened) {
+                        AlertDialog(
+                            onDismissRequest = { viewModel.isDialogOpened = false },
+                            confirmButton = {
+                                Button(onClick = {
+                                    viewModel.saveCurrentObject()
+                                    viewModel.currentPointName = ""
+                                    viewModel.deviation = 0f
+                                    viewModel.isDialogOpened = false
+                                }, content = { Text("Add") })
+                            },
+                            dismissButton = {
+                                Button(
+                                    onClick = { viewModel.isDialogOpened = false },
+                                    content = { Text(text = "Cancel") })
+                            },
+                            text = {
+                                Column(verticalArrangement = Arrangement.spacedBy(Dp(3f))) {
+                                    TextField(
+                                        value = viewModel.newPointName,
+                                        onValueChange = { newText ->
+                                            viewModel.newPointName = newText
+                                        }, placeholder = { Text(text = "Point name") })
+                                    TextField(
+                                        value = viewModel.deviation.toString(),
+                                        onValueChange = { newText ->
+                                            viewModel.deviation = newText.toFloat()
+                                        }, placeholder = { Text(text = "Deviation") })
+                                }
+                            })
                     }
                 }
             }

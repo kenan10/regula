@@ -10,7 +10,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 
 @Composable
-fun ReadinessIndicator(isReady: Boolean) {
+fun ReadinessIndicator(modifier: Modifier = Modifier, isReady: Boolean) {
     val painterUnready = painterResource(id = R.drawable.red_circle)
     val painterReady = painterResource(id = R.drawable.green_cirle)
 
@@ -18,6 +18,6 @@ fun ReadinessIndicator(isReady: Boolean) {
         painter = if (isReady) painterReady else painterUnready,
         contentDescription = "Readiness Status",
         contentScale = ContentScale.Fit,
-        modifier = Modifier.height(Dp(25f)).width(Dp(25f))
+        modifier = modifier
     )
 }

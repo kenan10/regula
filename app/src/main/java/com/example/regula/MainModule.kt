@@ -1,6 +1,8 @@
 package com.example.regula
 
 import android.app.Application
+import androidx.room.Room
+import com.example.regula.data.local.PointsDatabase
 import com.example.regula.sensors.Accelerometer
 import com.example.regula.sensors.Magnetometer
 import com.example.regula.sensors.MeasurableSensor
@@ -13,7 +15,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object SensorModule {
+object MainModule {
     @Provides
     @Singleton
     @Named("accelerometer")
@@ -26,5 +28,11 @@ object SensorModule {
     @Named("magnetometer")
     fun provideMagnetometer(app: Application): MeasurableSensor {
         return Magnetometer(app)
+    }
+
+    @Provides
+    @Singleton
+    fun providePointsDatabase(app: Application): PointsDatabase {
+        return Room.databaseBuilder(app, PointsDatabase::class.java, "reguladb.db").build()
     }
 }
