@@ -6,4 +6,6 @@ import com.example.regula.domain.model.UserPoint
 interface UserPointRepository {
     suspend fun getAllUserPoints(): List<UserPoint>
     suspend fun insertUserPoint(userPoint: AddUserPoint)
+    suspend fun insertUserPointManual(userPoint: UserPoint)
+    suspend fun deleteAll()
 }

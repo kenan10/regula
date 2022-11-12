@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.regula.ui.theme.RegulaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,8 +27,7 @@ class MainActivity : ComponentActivity() {
             RegulaTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                 ) {
                     val viewModel = hiltViewModel<MainViewModel>()
                     val activity = LocalContext.current as Activity
@@ -48,15 +45,27 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Column {
                                 Text(
-                                    text = viewModel.accelerometerShowedValue
+                                    text = viewModel.accelerometerShowedValue,
+                                    modifier = Modifier.background(Color.White)
                                 )
                                 Text(
-                                    text = viewModel.magnetometerShowedValue
+                                    text = viewModel.magnetometerShowedValue,
+                                    modifier = Modifier.background(Color.White)
+                                )
+                                Text(
+                                    text = viewModel.angles,
+                                    modifier = Modifier.background(Color.White)
+                                )
+                                Text(
+                                    text = viewModel.isInCircleDistance,
+                                    modifier = Modifier.background(Color.White)
                                 )
                             }
                             ReadinessIndicator(
                                 isReady = viewModel.isReady,
-                                modifier = Modifier.height(Dp(25f)).width(Dp(25f))
+                                modifier = Modifier
+                                    .height(Dp(25f))
+                                    .width(Dp(25f))
                             )
                         }
                         Row(
@@ -68,10 +77,18 @@ class MainActivity : ComponentActivity() {
                                 text = viewModel.currentPointName
                             )
                         }
-                        Button(onClick = {
-                            if (viewModel.isReady) viewModel.isDialogOpened = true
-                        }) {
-                            Text(text = "Save current point")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Dp(5f))
+                        ) {
+                            Button(onClick = { viewModel.deleteAllPoints() }) {
+                                Text(text = "Wipe data")
+                            }
+                            Button(onClick = {
+                                if (viewModel.isReady) viewModel.isDialogOpened = true
+                            }) {
+                                Text(text = "Save current point")
+                            }
                         }
                     }
                     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -92,33 +109,31 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     if (viewModel.isDialogOpened) {
-                        AlertDialog(
-                            onDismissRequest = { viewModel.isDialogOpened = false },
+                        AlertDialog(onDismissRequest = { viewModel.isDialogOpened = false },
                             confirmButton = {
                                 Button(onClick = {
                                     viewModel.saveCurrentObject()
                                     viewModel.currentPointName = ""
-                                    viewModel.deviation = 0f
+                                    viewModel.deviation = ""
                                     viewModel.isDialogOpened = false
                                 }, content = { Text("Add") })
                             },
                             dismissButton = {
-                                Button(
-                                    onClick = { viewModel.isDialogOpened = false },
+                                Button(onClick = { viewModel.isDialogOpened = false },
                                     content = { Text(text = "Cancel") })
                             },
                             text = {
                                 Column(verticalArrangement = Arrangement.spacedBy(Dp(3f))) {
-                                    TextField(
-                                        value = viewModel.newPointName,
+                                    TextField(value = viewModel.newPointName,
                                         onValueChange = { newText ->
                                             viewModel.newPointName = newText
-                                        }, placeholder = { Text(text = "Point name") })
-                                    TextField(
-                                        value = viewModel.deviation.toString(),
+                                        },
+                                        placeholder = { Text(text = "Point name") })
+                                    TextField(value = viewModel.deviation,
                                         onValueChange = { newText ->
-                                            viewModel.deviation = newText.toFloat()
-                                        }, placeholder = { Text(text = "Deviation") })
+                                            viewModel.deviation = newText
+                                        },
+                                        placeholder = { Text(text = "Deviation") })
                                 }
                             })
                     }

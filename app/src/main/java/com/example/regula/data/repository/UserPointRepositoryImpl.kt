@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UserPointRepositoryImpl @Inject constructor(private val db: PointsDatabase) :
+class UserPointRepositoryImpl @Inject constructor(db: PointsDatabase) :
     UserPointRepository {
     private val dao = db.dao
 
@@ -20,5 +20,13 @@ class UserPointRepositoryImpl @Inject constructor(private val db: PointsDatabase
 
     override suspend fun insertUserPoint(userPoint: AddUserPoint) {
         dao.insertUserPoint(userPoint.toUserPointEntity())
+    }
+
+    override suspend fun insertUserPointManual(userPoint: UserPoint) {
+        dao.insertUserPoint(userPoint.toUserPointEntity())
+    }
+
+    override suspend fun deleteAll() {
+        dao.deleteAll()
     }
 }

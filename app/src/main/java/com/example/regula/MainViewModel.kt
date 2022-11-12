@@ -31,7 +31,9 @@ class MainViewModel @Inject constructor(
     var isReady by mutableStateOf(false)
     var isDialogOpened by mutableStateOf(false)
     var newPointName by mutableStateOf("")
-    var deviation by mutableStateOf(0f)
+    var deviation by mutableStateOf("")
+    var angles by mutableStateOf("")
+    var isInCircleDistance by mutableStateOf("")
 
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
@@ -40,6 +42,13 @@ class MainViewModel @Inject constructor(
         accelerometer.startListening()
         magnetometer.startListening()
         accelerometer.setOnSensorValuesChangedListener { values ->
+            if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                val spacePoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                val angle = "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
+                angles = angle
+                findOutPointName()
+            }
+
             accelerometerValue = values
             val sensorValue = appContext.resources.getString(
                 R.string.sensor_value,
@@ -49,7 +58,6 @@ class MainViewModel @Inject constructor(
                 values[2].format(3)
             )
             accelerometerShowedValue = sensorValue
-            findOutPointName()
 
             isReady = abs(0 - values[1]) < 0.4
         }
@@ -63,23 +71,36 @@ class MainViewModel @Inject constructor(
                 values[2].format(3)
             )
             magnetometerShowedValue = sensorValue
-            findOutPointName()
+            if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                val spacePoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                val angle = "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
+                angles = angle
+                findOutPointName()
+            }
         }
     }
 
     private fun findOutPointName() {
         if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && isReady) {
-            val currentPoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+            val currentPointSpace = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
 
-            currentPointName = userPoints.find {
-                currentPoint.isInCircle(
-                    center = it.point,
-                    deviation = it.deviation
+            val currentPoint = userPoints.find {
+                currentPointSpace.isInCircle(
+                    center = it.point, deviation = it.deviation
                 )
-            }?.name.toString()
-            println(currentPointName)
+            }
+            isInCircleDistance =
+                currentPoint?.point?.let { currentPointSpace.distanceTo(it).toString() }.toString()
+            currentPointName = currentPoint?.name.toString()
         } else {
             currentPointName = "null"
+        }
+    }
+
+    fun deleteAllPoints() {
+        viewModelScope.launch {
+            userPointRepository.deleteAll()
+            userPoints = emptyList()
         }
     }
 
@@ -90,7 +111,7 @@ class MainViewModel @Inject constructor(
                     name = newPointName,
                     accelerometerValue = accelerometerValue,
                     magnetometerValue = magnetometerValue,
-                    deviation = deviation
+                    deviation = deviation.toFloat()
                 )
             )
             userPoints = userPointRepository.getAllUserPoints()

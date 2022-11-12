@@ -12,4 +12,7 @@ interface PointDao {
 
     @Query("SELECT * FROM UserPointEntity")
     suspend fun getAll(): List<UserPointEntity>
+
+    @Query("DELETE FROM UserPointEntity")
+    suspend fun deleteAll()
 }

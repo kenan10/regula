@@ -23,3 +23,12 @@ fun AddUserPoint.toUserPointEntity(): UserPointEntity {
         magnetometerAngle = point.magnetometerAngle
     )
 }
+
+fun UserPoint.toUserPointEntity(): UserPointEntity {
+    return UserPointEntity(
+        name = name,
+        deviation = deviation,
+        accelerometerAngle = point.accelerometerAngle,
+        magnetometerAngle = point.magnetometerAngle
+    )
+}
