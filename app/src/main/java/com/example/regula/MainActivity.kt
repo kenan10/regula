@@ -72,16 +72,12 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().offset(x = Dp(-40f)),
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
                                 modifier = Modifier.background(Color.White),
                                 text = viewModel.currentPointName
-                            )
-                            Text(
-                                modifier = Modifier.background(Color.White),
-                                text = viewModel.radius.toString()
                             )
                         }
                         Row(
@@ -129,7 +125,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel.saveCurrentObject()
                                     viewModel.currentPointName = ""
                                     viewModel.deviation = ""
-                                    viewModel.isDialogOpened = true
+                                    viewModel.isDialogOpened = false
                                 }, content = { Text("Add") })
                             },
                             dismissButton = {
