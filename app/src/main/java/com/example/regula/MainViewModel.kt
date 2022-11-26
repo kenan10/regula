@@ -24,6 +24,7 @@ class MainViewModel @Inject constructor(
     private val appContext: Application,
     private val userPointRepository: UserPointRepository,
 ) : ViewModel() {
+    var radius by mutableStateOf(0f)
     var currentPointName by mutableStateOf("")
     var userPoints by mutableStateOf(emptyList<UserPoint>())
     var accelerometerShowedValue by mutableStateOf("")
@@ -42,58 +43,73 @@ class MainViewModel @Inject constructor(
         accelerometer.startListening()
         magnetometer.startListening()
         accelerometer.setOnSensorValuesChangedListener { values ->
-            if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
-                val spacePoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                val angle = "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
-                angles = angle
-                findOutPointName()
+            if (!isDialogOpened) {
+                if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                    val spacePoint =
+                        SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                    val angle =
+                        "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
+                    angles = angle
+                    findOutPoint()
+                }
+
+                accelerometerValue = values
+                val sensorValue = appContext.resources.getString(
+                    R.string.sensor_value,
+                    "Accelerometer",
+                    values[0].format(3),
+                    values[1].format(3),
+                    values[2].format(3)
+                )
+                accelerometerShowedValue = sensorValue
+
+                isReady = abs(0 - values[1]) < 0.4
             }
-
-            accelerometerValue = values
-            val sensorValue = appContext.resources.getString(
-                R.string.sensor_value,
-                "Accelerometer",
-                values[0].format(3),
-                values[1].format(3),
-                values[2].format(3)
-            )
-            accelerometerShowedValue = sensorValue
-
-            isReady = abs(0 - values[1]) < 0.4
         }
         magnetometer.setOnSensorValuesChangedListener { values ->
-            magnetometerValue = values
-            val sensorValue = appContext.resources.getString(
-                R.string.sensor_value,
-                "Magnetometer",
-                values[0].format(3),
-                values[1].format(3),
-                values[2].format(3)
-            )
-            magnetometerShowedValue = sensorValue
-            if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
-                val spacePoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                val angle = "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
-                angles = angle
-                findOutPointName()
+            if (!isDialogOpened) {
+                magnetometerValue = values
+                val sensorValue = appContext.resources.getString(
+                    R.string.sensor_value,
+                    "Magnetometer",
+                    values[0].format(3),
+                    values[1].format(3),
+                    values[2].format(3)
+                )
+                magnetometerShowedValue = sensorValue
+                if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                    val spacePoint =
+                        SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                    val angle =
+                        "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
+                    angles = angle
+                    findOutPoint()
+                }
             }
         }
     }
 
-    private fun findOutPointName() {
+    private fun findOutPoint() {
         if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && isReady) {
-            val currentPointSpace = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+            val currentPointSpace =
+                SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
 
             val currentPoint = userPoints.find {
                 currentPointSpace.isInCircle(
                     center = it.point, deviation = it.deviation
                 )
             }
-            isInCircleDistance =
-                currentPoint?.point?.let { currentPointSpace.distanceTo(it).toString() }.toString()
-            currentPointName = currentPoint?.name.toString()
+            if (currentPoint != null) {
+                radius = currentPoint.deviation
+                currentPointName = currentPoint.name
+            } else {
+                radius = 0f
+                currentPointName = "unknown"
+            }
+
         } else {
-            currentPointName = "null"
+            currentPointName = "loading"
+            radius = 0f
         }
     }
 

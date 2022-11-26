@@ -8,11 +8,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.regula.ui.theme.RegulaTheme
@@ -76,18 +79,22 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.background(Color.White),
                                 text = viewModel.currentPointName
                             )
+                            Text(
+                                modifier = Modifier.background(Color.White),
+                                text = viewModel.radius.toString()
+                            )
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Dp(5f))
                         ) {
-                            Button(onClick = { viewModel.deleteAllPoints() }) {
-                                Text(text = "Wipe data")
-                            }
                             Button(onClick = {
                                 if (viewModel.isReady) viewModel.isDialogOpened = true
                             }) {
-                                Text(text = "Save current point")
+                                Text(text = "Add point")
+                            }
+                            Button(onClick = { viewModel.deleteAllPoints() }) {
+                                Text(text = "Wipe data")
                             }
                         }
                     }
@@ -107,6 +114,13 @@ class MainActivity : ComponentActivity() {
                             color = Color.Red,
                             strokeWidth = 5f
                         )
+
+                        drawCircle(
+                            style = Stroke(width = 5f),
+                            center = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
+                            radius = viewModel.radius * 10000,
+                            color = Color.Red
+                        )
                     }
                     if (viewModel.isDialogOpened) {
                         AlertDialog(onDismissRequest = { viewModel.isDialogOpened = false },
@@ -115,7 +129,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel.saveCurrentObject()
                                     viewModel.currentPointName = ""
                                     viewModel.deviation = ""
-                                    viewModel.isDialogOpened = false
+                                    viewModel.isDialogOpened = true
                                 }, content = { Text("Add") })
                             },
                             dismissButton = {
@@ -133,6 +147,7 @@ class MainActivity : ComponentActivity() {
                                         onValueChange = { newText ->
                                             viewModel.deviation = newText
                                         },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                         placeholder = { Text(text = "Deviation") })
                                 }
                             })
