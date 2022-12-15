@@ -1,33 +1,36 @@
 package com.example.regula.data.mapper
 
-import com.example.regula.data.local.UserPointEntity
-import com.example.regula.domain.model.AddUserPoint
-import com.example.regula.domain.model.UserPoint
+import com.example.regula.data.local.PoiEntity
+import com.example.regula.domain.model.AddPoi
+import com.example.regula.domain.model.Poi
 import com.example.regula.util.SpacePoint
 
-fun UserPointEntity.toUserPoint(): UserPoint {
-    return UserPoint(
+fun PoiEntity.toPoi(): Poi {
+    return Poi(
         name = name,
         deviation = deviation,
+        viewingPointId = viewingPointId,
         point = SpacePoint(accelerometerAngle, magnetometerAngle)
     )
 }
 
-fun AddUserPoint.toUserPointEntity(): UserPointEntity {
+fun AddPoi.toPoiEntity(): PoiEntity {
     val point = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
 
-    return UserPointEntity(
+    return PoiEntity(
         name = name,
+        viewingPointId = viewingPointId,
         deviation = deviation,
         accelerometerAngle = point.accelerometerAngle,
         magnetometerAngle = point.magnetometerAngle
     )
 }
 
-fun UserPoint.toUserPointEntity(): UserPointEntity {
-    return UserPointEntity(
+fun Poi.toPoiEntity(): PoiEntity {
+    return PoiEntity(
         name = name,
         deviation = deviation,
+        viewingPointId = viewingPointId,
         accelerometerAngle = point.accelerometerAngle,
         magnetometerAngle = point.magnetometerAngle
     )

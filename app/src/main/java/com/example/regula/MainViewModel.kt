@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.regula.domain.model.AddUserPoint
-import com.example.regula.domain.model.UserPoint
-import com.example.regula.domain.repository.UserPointRepository
+import com.example.regula.domain.model.AddPoi
+import com.example.regula.domain.model.Poi
+import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.sensors.MeasurableSensor
 import com.example.regula.util.SpacePoint
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,11 +22,11 @@ class MainViewModel @Inject constructor(
     @Named("accelerometer") private val accelerometer: MeasurableSensor,
     @Named("magnetometer") private val magnetometer: MeasurableSensor,
     private val appContext: Application,
-    private val userPointRepository: UserPointRepository,
+    private val userPointRepository: PointsRepository,
 ) : ViewModel() {
     var radius by mutableStateOf(0f)
     var currentPointName by mutableStateOf("")
-    var userPoints by mutableStateOf(emptyList<UserPoint>())
+    var userPoints by mutableStateOf(emptyList<Poi>())
     var accelerometerShowedValue by mutableStateOf("")
     var magnetometerShowedValue by mutableStateOf("")
     var isReady by mutableStateOf(false)
@@ -115,22 +115,22 @@ class MainViewModel @Inject constructor(
 
     fun deleteAllPoints() {
         viewModelScope.launch {
-            userPointRepository.deleteAll()
+            userPointRepository.deleteAllPois()
             userPoints = emptyList()
         }
     }
 
     fun saveCurrentObject() {
         viewModelScope.launch {
-            userPointRepository.insertUserPoint(
-                AddUserPoint(
+            userPointRepository.insertPoi(
+                AddPoi(
                     name = newPointName,
                     accelerometerValue = accelerometerValue,
                     magnetometerValue = magnetometerValue,
                     deviation = deviation.toFloat()
                 )
             )
-            userPoints = userPointRepository.getAllUserPoints()
+            userPoints = userPointRepository.getAllPois()
             println(userPoints)
         }
     }

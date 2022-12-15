@@ -2,7 +2,7 @@ package com.example.regula
 
 import android.app.Application
 import androidx.room.Room
-import com.example.regula.data.local.PointsDatabase
+import com.example.regula.data.local.RegulaDatabase
 import com.example.regula.sensors.Accelerometer
 import com.example.regula.sensors.Magnetometer
 import com.example.regula.sensors.MeasurableSensor
@@ -32,7 +32,7 @@ object MainModule {
 
     @Provides
     @Singleton
-    fun providePointsDatabase(app: Application): PointsDatabase {
-        return Room.databaseBuilder(app, PointsDatabase::class.java, "reguladb.db").build()
+    fun providePointsDatabase(app: Application): RegulaDatabase {
+        return Room.databaseBuilder(app, RegulaDatabase::class.java, "reguladb.db").build()
     }
 }
