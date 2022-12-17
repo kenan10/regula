@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.regula.PermissionsRequest
 import com.example.regula.ReadinessIndicator
 
 @Composable
@@ -24,7 +23,6 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
     val activity = LocalContext.current as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
-    PermissionsRequest()
     CameraPreview()
     Column(
         verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(Dp(7f), Dp(5f))

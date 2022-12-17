@@ -1,4 +1,4 @@
-package com.example.regula
+package com.example.regula.presentation.common
 
 import android.Manifest
 import androidx.compose.runtime.Composable
