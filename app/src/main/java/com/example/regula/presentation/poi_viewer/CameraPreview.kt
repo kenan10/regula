@@ -1,4 +1,4 @@
-package com.example.regula
+package com.example.regula.presentation.poi_viewer
 
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview

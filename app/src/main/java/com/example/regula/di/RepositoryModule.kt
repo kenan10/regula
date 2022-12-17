@@ -1,4 +1,4 @@
-package com.example.regula
+package com.example.regula.di
 
 import com.example.regula.data.repository.PointsRepositoryImpl
 import com.example.regula.domain.repository.PointsRepository
@@ -13,5 +13,5 @@ import javax.inject.Singleton
 abstract class RepositoryModule {
     @Binds
     @Singleton
-    abstract fun bindUserPointsRepository(userPointRepository: PointsRepositoryImpl): PointsRepository
+    abstract fun bindPointsRepository(pointsRepositoryImpl: PointsRepositoryImpl): PointsRepository
 }

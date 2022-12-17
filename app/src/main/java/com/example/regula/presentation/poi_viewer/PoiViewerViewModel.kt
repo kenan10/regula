@@ -1,4 +1,4 @@
-package com.example.regula
+package com.example.regula.presentation.poi_viewer
 
 import android.app.Application
 import androidx.compose.runtime.getValue
@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.regula.R
 import com.example.regula.domain.model.AddPoi
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.repository.PointsRepository
@@ -18,7 +19,7 @@ import javax.inject.Named
 import kotlin.math.abs
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class PoiViewerViewModel @Inject constructor(
     @Named("accelerometer") private val accelerometer: MeasurableSensor,
     @Named("magnetometer") private val magnetometer: MeasurableSensor,
     private val appContext: Application,
@@ -127,7 +128,8 @@ class MainViewModel @Inject constructor(
                     name = newPointName,
                     accelerometerValue = accelerometerValue,
                     magnetometerValue = magnetometerValue,
-                    deviation = deviation.toFloat()
+                    deviation = deviation.toFloat(),
+                    viewingPointId = 1
                 )
             )
             userPoints = userPointRepository.getAllPois()

@@ -1,8 +1,9 @@
-package com.example.regula
+package com.example.regula.di
 
 import android.app.Application
 import androidx.room.Room
 import com.example.regula.data.local.RegulaDatabase
+import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.sensors.Accelerometer
 import com.example.regula.sensors.Magnetometer
 import com.example.regula.sensors.MeasurableSensor
@@ -15,7 +16,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object MainModule {
+object AppModule {
     @Provides
     @Singleton
     @Named("accelerometer")
