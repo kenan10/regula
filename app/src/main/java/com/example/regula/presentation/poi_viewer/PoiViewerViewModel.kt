@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.regula.R
-import com.example.regula.domain.model.AddPoi
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.sensors.MeasurableSensor
@@ -95,6 +94,9 @@ class PoiViewerViewModel @Inject constructor(
             val currentPointSpace =
                 SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
 
+            viewModelScope.launch {
+                userPoints = userPointRepository.getAllPois()
+            }
             val currentPoint = userPoints.find {
                 currentPointSpace.isInCircle(
                     center = it.point, deviation = it.deviation
@@ -124,10 +126,9 @@ class PoiViewerViewModel @Inject constructor(
     fun saveCurrentObject() {
         viewModelScope.launch {
             userPointRepository.insertPoi(
-                AddPoi(
+                Poi(
                     name = newPointName,
-                    accelerometerValue = accelerometerValue,
-                    magnetometerValue = magnetometerValue,
+                    point = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue),
                     deviation = deviation.toFloat(),
                     viewingPointId = 1
                 )

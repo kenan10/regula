@@ -3,7 +3,6 @@ package com.example.regula.data.repository
 import com.example.regula.data.local.RegulaDatabase
 import com.example.regula.data.mapper.toPoi
 import com.example.regula.data.mapper.toPoiEntity
-import com.example.regula.domain.model.AddPoi
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.model.ViewingPoint
 import com.example.regula.domain.repository.PointsRepository
@@ -19,7 +18,7 @@ class PointsRepositoryImpl @Inject constructor(db: RegulaDatabase) :
         return dao.getAllPois().map { it.toPoi() }
     }
 
-    override suspend fun insertPoi(userPoint: AddPoi) {
+    override suspend fun insertPoi(userPoint: Poi) {
         dao.insertPoi(userPoint.toPoiEntity())
     }
 

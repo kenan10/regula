@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.ui.Modifier
-import com.example.regula.presentation.qr_scanner.NavGraphs
+import com.example.regula.presentation.NavGraphs
 import com.example.regula.ui.theme.RegulaTheme
 import com.ramcosta.composedestinations.DestinationsNavHost
 import dagger.hilt.android.AndroidEntryPoint

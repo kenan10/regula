@@ -17,15 +17,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.regula.ReadinessIndicator
+import com.ramcosta.composedestinations.annotation.Destination
 
 @Composable
+@Destination()
 fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
     val activity = LocalContext.current as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
     CameraPreview()
     Column(
-        verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(Dp(7f), Dp(5f))
+        verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize().padding(Dp(7f), Dp(5f))
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()
