@@ -1,6 +1,5 @@
 package com.example.regula.presentation.common
 
-import android.Manifest
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -11,12 +10,10 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun PermissionsRequest() {
+fun PermissionsRequest(permissions: List<String>) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val permissionsState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.CAMERA,
-        )
+        permissions = permissions
     )
 
     DisposableEffect(

@@ -1,6 +1,13 @@
 package com.example.regula.presentation.poi_viewer
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.icu.text.SimpleDateFormat
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,10 +19,14 @@ import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.sensors.MeasurableSensor
 import com.example.regula.util.SpacePoint
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.g0dkar.qrcode.QRCode
 import kotlinx.coroutines.launch
+import java.io.File
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.abs
+
 
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
@@ -35,6 +46,8 @@ class PoiViewerViewModel @Inject constructor(
     var deviation by mutableStateOf("")
     var angles by mutableStateOf("")
     var isInCircleDistance by mutableStateOf("")
+    var showDetails by mutableStateOf(false)
+    var isMenuOpened by mutableStateOf(false)
 
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
@@ -111,9 +124,36 @@ class PoiViewerViewModel @Inject constructor(
             }
 
         } else {
-            currentPointName = "loading"
+            currentPointName = "unknown"
             radius = 0f
         }
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    fun saveQrWithPoisInfo() {
+        val simpleDateFormat = SimpleDateFormat("yyyymmsshhmmss")
+        val date = simpleDateFormat.format(Date())
+        var finalCompactString = ""
+        userPoints.forEach {
+            finalCompactString += it.toCompactString()
+        }
+
+        val resolver: ContentResolver = appContext.contentResolver
+        val contentValues = ContentValues()
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "image_$date.jpg")
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+        contentValues.put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            Environment.DIRECTORY_PICTURES + File.separator + "TestFolder"
+        )
+        val imageUri =
+            resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        resolver.openOutputStream(imageUri!!).use {
+            QRCode(finalCompactString)
+                .render(margin = 25)
+                .writeImage(it!!)
+        }
+        Toast.makeText(appContext, "QR code saved", Toast.LENGTH_SHORT).show()
     }
 
     fun deleteAllPoints() {

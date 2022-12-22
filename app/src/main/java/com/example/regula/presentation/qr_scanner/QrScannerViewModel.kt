@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.repository.PointsRepository
-import com.example.regula.util.SpacePoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,28 +24,10 @@ class QrScannerViewModel @Inject constructor(private val userPointRepository: Po
     }
 
     fun decodeText() {
-        val subss = qrCodeText.split(";")
-
-        for (i in subss.indices step 4) {
-            val label = subss[i]
-            val accelerometerValue =
-                if (subss[i + 1][0].toString() == "-") "-" + "0." + subss[i + 1].slice(1 until subss[i + 1].length)
-                else "0." + subss[i + 1].slice(0 until subss[i + 1].length)
-            val magnetometerValue =
-                if (subss[i + 2][0].toString() == "-") "-" + "0." + subss[i + 2].slice(1 until subss[i + 2].length)
-                else "0." + subss[i + 2].slice(0 until subss[i + 2].length)
-            val deviation = "0.0" + subss[i + 3]
-            val spacePoint = SpacePoint(accelerometerValue.toFloat(), magnetometerValue.toFloat())
-            val newPoi = Poi(
-                name = label,
-                viewingPointId = 1,
-                point = spacePoint,
-                deviation = deviation.toFloat()
-            )
-
-            pois = pois + newPoi
-            viewModelScope.launch {
-                userPointRepository.insertPoi(newPoi)
+        pois = Poi.fromCompactString(qrCodeText)
+        viewModelScope.launch {
+            pois.forEach {
+                userPointRepository.insertPoi(it)
             }
         }
     }
