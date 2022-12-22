@@ -4,16 +4,17 @@ import android.Manifest
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.regula.presentation.common.PermissionsRequest
 import com.example.regula.presentation.destinations.PoiViewerScreenDestination
@@ -50,10 +51,19 @@ fun QrScannerScreen(
             items(viewModel.pois) { poi -> PoiRow(poi) }
         }
         Row(
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
+            OutlinedButton(
+                onClick = { navigator.navigate(PoiViewerScreenDestination()) },
+                border = BorderStroke(1.dp, Color.LightGray)
+            ) {
+                Text(
+                    text = "Skip",
+                    color = Color.DarkGray
+                )
+            }
             FloatingActionButton(onClick = {
                 if (viewModel.pois.isEmpty()) scanQrCodeLauncher.launch(null)
                 else navigator.navigate(PoiViewerScreenDestination())

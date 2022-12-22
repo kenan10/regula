@@ -31,7 +31,6 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
     val activity = LocalContext.current as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
-//    PermissionsRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE))
     CameraPreview()
     Column(
         verticalArrangement = Arrangement.SpaceBetween,

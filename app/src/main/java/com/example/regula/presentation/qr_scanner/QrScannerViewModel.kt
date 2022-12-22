@@ -17,12 +17,6 @@ class QrScannerViewModel @Inject constructor(private val userPointRepository: Po
     var qrCodeText by mutableStateOf("")
     var pois by mutableStateOf(emptyList<Poi>())
 
-    init {
-        viewModelScope.launch {
-            userPointRepository.deleteAllPois()
-        }
-    }
-
     fun decodeText() {
         pois = Poi.fromCompactString(qrCodeText)
         viewModelScope.launch {
