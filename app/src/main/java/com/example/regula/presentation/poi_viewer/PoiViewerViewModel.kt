@@ -81,6 +81,14 @@ class PoiViewerViewModel @Inject constructor(
         }
         magnetometer.setOnSensorValuesChangedListener { values ->
             if (!isDialogOpened) {
+                if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                    val spacePoint =
+                        SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                    val angle =
+                        "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
+                    angles = angle
+                    findOutPoint()
+                }
                 magnetometerValue = values
                 val sensorValue = appContext.resources.getString(
                     R.string.sensor_value,
@@ -90,14 +98,6 @@ class PoiViewerViewModel @Inject constructor(
                     values[2].format(3)
                 )
                 magnetometerShowedValue = sensorValue
-                if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
-                    val spacePoint =
-                        SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                    val angle =
-                        "a: ${spacePoint.accelerometerAngle} b: ${spacePoint.magnetometerAngle}"
-                    angles = angle
-                    findOutPoint()
-                }
             }
         }
     }

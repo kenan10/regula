@@ -130,7 +130,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
         drawCircle(
             style = Stroke(width = 5f),
             center = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-            radius = viewModel.radius * 1000000,
+            radius = viewModel.radius * 10000,
             color = Color.Red
         )
     }
