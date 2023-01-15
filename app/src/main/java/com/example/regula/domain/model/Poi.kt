@@ -27,7 +27,7 @@ data class Poi(
                 .slice(2 until magnetometerAngleStr.length)
 
         val deviationComponent =
-            String.format("%.9f", deviation).slice(3 until String.format("%.9f", deviation).length)
+            String.format("%.4f", deviation).slice(3 until String.format("%.4f", deviation).length)
 
         return "${name};${accelerometerComponent};${magnetometerComponent};${deviationComponent};"
     }

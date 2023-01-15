@@ -36,7 +36,7 @@ class SpacePoint(val accelerometerAngle: Float, val magnetometerAngle: Float) {
      * @return whether true or false if instance is in circle or not
      */
     fun isInCircle(deviation: Float, center: SpacePoint): Boolean {
-        return deviation > ((this.magnetometerAngle - center.magnetometerAngle) / 10).pow(2) +
-                ((this.accelerometerAngle - center.accelerometerAngle) / 45).pow(2)
+        return deviation > (this.magnetometerAngle - center.magnetometerAngle).pow(2) +
+                (this.accelerometerAngle - center.accelerometerAngle).pow(2)
     }
 }
