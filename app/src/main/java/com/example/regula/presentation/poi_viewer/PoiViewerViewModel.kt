@@ -52,10 +52,12 @@ class PoiViewerViewModel @Inject constructor(
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
 
+    private var accelerometerLastValues: MutableList<List<Float>> = emptyList<List<Float>>().toMutableList()
+
     init {
         accelerometer.startListening()
         magnetometer.startListening()
-        accelerometer.setOnSensorValuesChangedListener { values ->
+        accelerometer.setOnSensorValuesChangedListener { values: List<Float> ->
             if (!isDialogOpened) {
                 if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
                     val spacePoint =
@@ -66,7 +68,25 @@ class PoiViewerViewModel @Inject constructor(
                     findOutPoint()
                 }
 
-                accelerometerValue = values
+                if (accelerometerLastValues.size != 3) {
+                    accelerometerValue = values
+                } else {
+                    val sum: MutableList<Float> = mutableListOf(0f, 0f, 0f)
+                    for (item: List<Float> in accelerometerLastValues) {
+                        sum[0] += item[0]
+                        sum[1] += item[1]
+                        sum[2] += item[2]
+                    }
+
+                    accelerometerValue = listOf(sum[0] / 3, sum[1] / 3, sum[2] / 3)
+                }
+
+                accelerometerLastValues += if (accelerometerLastValues.size == 3) {
+                    values
+                } else {
+                    accelerometerLastValues.removeFirst()
+                    values
+                }
                 val sensorValue = appContext.resources.getString(
                     R.string.sensor_value,
                     "Accelerometer",

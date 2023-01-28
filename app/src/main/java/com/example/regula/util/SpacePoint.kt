@@ -15,7 +15,7 @@ class SpacePoint(val accelerometerAngle: Float, val magnetometerAngle: Float) {
             accelerometerValue: List<Float>, magnetometerValue: List<Float>
         ): SpacePoint {
             val accelerometerAngle = asin(
-                accelerometerValue[2] / (sqrt(
+                accelerometerValue[0] / (sqrt(
                     accelerometerValue[2].pow(2) + accelerometerValue[0].pow(2)
                 ))
             )
