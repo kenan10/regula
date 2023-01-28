@@ -18,7 +18,7 @@ fun Poi.toPoiEntity(): PoiEntity {
         name = name,
         deviation = deviation,
         viewingPointId = viewingPointId,
-        accelerometerAngle = point.accelerometerAngle,
-        magnetometerAngle = point.magnetometerAngle
+        accelerometerAngle = point.pitch,
+        magnetometerAngle = point.azimuth
     )
 }

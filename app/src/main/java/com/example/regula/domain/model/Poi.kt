@@ -9,18 +9,18 @@ data class Poi(
     val deviation: Float
 ) {
     fun toCompactString(): String {
-        val accelerometerAngleStr = String.format("%.8f", point.accelerometerAngle)
+        val accelerometerAngleStr = String.format("%.8f", point.pitch)
         val accelerometerComponent =
-            if (point.accelerometerAngle < 0) "-${
+            if (point.pitch < 0) "-${
                 accelerometerAngleStr
                     .slice(3 until accelerometerAngleStr.length)
             }" else accelerometerAngleStr
                 .slice(2 until accelerometerAngleStr.length)
 
-        val magnetometerAngleStr = String.format("%.8f", point.magnetometerAngle)
+        val magnetometerAngleStr = String.format("%.8f", point.azimuth)
 
         val magnetometerComponent =
-            if (point.magnetometerAngle < 0) "-${
+            if (point.azimuth < 0) "-${
                 magnetometerAngleStr
                     .slice(3 until magnetometerAngleStr.length)
             }" else magnetometerAngleStr
