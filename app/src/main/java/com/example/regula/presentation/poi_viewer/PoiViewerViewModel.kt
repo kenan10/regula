@@ -27,6 +27,7 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.abs
 
+const val BUFFER_SIZE = 5
 
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
@@ -51,13 +52,26 @@ class PoiViewerViewModel @Inject constructor(
 
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
+    private var accelerometerRecentValues: MutableList<List<Float>> =
+        emptyList<List<Float>>().toMutableList()
+    private var magnetometerRecentValues: MutableList<List<Float>> =
+        emptyList<List<Float>>().toMutableList()
 
     init {
         accelerometer.startListening()
         magnetometer.startListening()
         accelerometer.setOnSensorValuesChangedListener { values ->
             if (!isDialogOpened) {
-                accelerometerValue = values
+                accelerometerValue = if (accelerometerRecentValues.size == BUFFER_SIZE)
+                        getAverageOf2dFloatList(accelerometerRecentValues)
+                    else values
+
+                accelerometerRecentValues += if (accelerometerRecentValues.size < BUFFER_SIZE) {
+                    values
+                } else {
+                    accelerometerRecentValues.removeFirst()
+                    values
+                }
 
                 if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
                     val spacePoint =
@@ -82,7 +96,16 @@ class PoiViewerViewModel @Inject constructor(
         }
         magnetometer.setOnSensorValuesChangedListener { values ->
             if (!isDialogOpened) {
-                magnetometerValue = values
+                magnetometerValue = if (magnetometerRecentValues.size == BUFFER_SIZE)
+                    getAverageOf2dFloatList(magnetometerRecentValues)
+                else values
+
+                magnetometerRecentValues += if (magnetometerRecentValues.size < BUFFER_SIZE) {
+                    values
+                } else {
+                    magnetometerRecentValues.removeFirst()
+                    values
+                }
 
                 if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
                     val spacePoint =
@@ -131,6 +154,17 @@ class PoiViewerViewModel @Inject constructor(
             currentPointName = "unknown"
             radius = 0f
         }
+    }
+
+    private fun getAverageOf2dFloatList(list: List<List<Float>>): List<Float> {
+        val sum: MutableList<Float> = mutableListOf(0f, 0f, 0f)
+        for (item: List<Float> in list) {
+            sum[0] += item[0]
+            sum[1] += item[1]
+            sum[2] += item[2]
+        }
+
+        return listOf(sum[0] / 3, sum[1] / 3, sum[2] / 3)
     }
 
     @SuppressLint("SimpleDateFormat")
