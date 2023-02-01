@@ -4,9 +4,9 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -16,14 +16,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.regula.R
 import com.example.regula.presentation.common.PermissionsRequest
 import com.ramcosta.composedestinations.annotation.Destination
+
+const val MIN_VISUAL_SIZE = 7f
+const val MAX_VISUAL_SIZE = 30f
 
 @Composable
 @Destination()
@@ -44,22 +49,11 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (viewModel.showDetails) {
-                Column {
-                    Text(
-                        text = viewModel.accelerometerShowedValue,
-                        modifier = Modifier.background(Color.White)
-                    )
-                    Text(
-                        text = viewModel.magnetometerShowedValue,
-                        modifier = Modifier.background(Color.White)
-                    )
-                    Text(
-                        text = viewModel.angles, modifier = Modifier.background(Color.White)
-                    )
-                    Text(
-                        text = viewModel.isInCircleDistance,
-                        modifier = Modifier.background(Color.White)
-                    )
+                Column(modifier = Modifier.widthIn(max = 500.dp)) {
+                    DetailsItem(text = viewModel.accelerometerShowedValue)
+                    DetailsItem(text = viewModel.magnetometerShowedValue)
+                    DetailsItem(text = viewModel.angles)
+                    DetailsItem(text = viewModel.isInCircleDistance)
                 }
             }
             ReadinessIndicator(
@@ -130,17 +124,17 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
         drawCircle(
             style = Stroke(width = 5f),
             center = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-            radius = viewModel.radius * 10000,
+            radius = viewModel.radius * 10,
             color = Color.Red
         )
     }
     if (viewModel.isDialogOpened) {
-        AlertDialog(onDismissRequest = { viewModel.isDialogOpened = false }, confirmButton = {
+        AlertDialog(modifier = Modifier, onDismissRequest = { viewModel.isDialogOpened = false }, confirmButton = {
             Button(onClick = {
                 viewModel.saveCurrentObject()
                 viewModel.currentPointName = ""
-                viewModel.deviation = ""
                 viewModel.isDialogOpened = false
+                viewModel.newRadius = 0.0f
             }, content = { Text("Add") })
         }, dismissButton = {
             Button(onClick = { viewModel.isDialogOpened = false },
@@ -150,13 +144,33 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                 TextField(value = viewModel.newPointName, onValueChange = { newText ->
                     viewModel.newPointName = newText
                 }, placeholder = { Text(text = "Point name") })
-                TextField(value = viewModel.deviation,
-                    onValueChange = { newText ->
-                        viewModel.deviation = newText
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    placeholder = { Text(text = "Deviation") })
+                Slider(
+                    value = viewModel.newRadius,
+                    onValueChange = { viewModel.newRadius = it },
+                    valueRange = MIN_VISUAL_SIZE..MAX_VISUAL_SIZE
+                )
             }
         })
     }
+}
+
+@Composable
+fun ReadinessIndicator(modifier: Modifier = Modifier, isReady: Boolean) {
+    val painterUnready = painterResource(id = R.drawable.red_circle)
+    val painterReady = painterResource(id = R.drawable.green_cirle)
+
+    Image(
+        painter = if (isReady) painterReady else painterUnready,
+        contentDescription = "Readiness Status",
+        contentScale = ContentScale.Fit,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun DetailsItem(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.background(Color.White)
+    )
 }

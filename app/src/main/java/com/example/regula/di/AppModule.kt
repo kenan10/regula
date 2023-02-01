@@ -3,7 +3,6 @@ package com.example.regula.di
 import android.app.Application
 import androidx.room.Room
 import com.example.regula.data.local.RegulaDatabase
-import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.sensors.Accelerometer
 import com.example.regula.sensors.Magnetometer
 import com.example.regula.sensors.MeasurableSensor
@@ -34,6 +33,7 @@ object AppModule {
     @Provides
     @Singleton
     fun providePointsDatabase(app: Application): RegulaDatabase {
-        return Room.databaseBuilder(app, RegulaDatabase::class.java, "reguladb.db").build()
+        return Room.databaseBuilder(app, RegulaDatabase::class.java, "reguladb.db")
+            .fallbackToDestructiveMigration().build()
     }
 }

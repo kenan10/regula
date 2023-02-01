@@ -27,7 +27,8 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.abs
 
-const val BUFFER_SIZE = 5
+const val BUFFER_SIZE = 3
+const val DEVIATION = 0.02f
 
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
@@ -37,6 +38,7 @@ class PoiViewerViewModel @Inject constructor(
     private val userPointRepository: PointsRepository,
 ) : ViewModel() {
     var radius by mutableStateOf(0f)
+    var newRadius by mutableStateOf(0f)
     var currentPointName by mutableStateOf("")
     var userPoints by mutableStateOf(emptyList<Poi>())
     var accelerometerShowedValue by mutableStateOf("")
@@ -44,7 +46,6 @@ class PoiViewerViewModel @Inject constructor(
     var isReady by mutableStateOf(false)
     var isDialogOpened by mutableStateOf(false)
     var newPointName by mutableStateOf("")
-    var deviation by mutableStateOf("")
     var angles by mutableStateOf("")
     var isInCircleDistance by mutableStateOf("")
     var showDetails by mutableStateOf(false)
@@ -143,7 +144,7 @@ class PoiViewerViewModel @Inject constructor(
                 )
             }
             if (currentPoint != null) {
-                radius = currentPoint.deviation
+                radius = currentPoint.visualSize
                 currentPointName = currentPoint.name
             } else {
                 radius = 0f
@@ -207,8 +208,9 @@ class PoiViewerViewModel @Inject constructor(
                 Poi(
                     name = newPointName,
                     point = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue),
-                    deviation = deviation.toFloat(),
-                    viewingPointId = 1
+                    deviation = DEVIATION,
+                    viewingPointId = 1,
+                    visualSize = newRadius
                 )
             )
             userPoints = userPointRepository.getAllPois()

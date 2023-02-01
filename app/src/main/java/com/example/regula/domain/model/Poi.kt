@@ -6,7 +6,8 @@ data class Poi(
     val name: String,
     val viewingPointId: Int,
     val point: SpacePoint,
-    val deviation: Float
+    val deviation: Float,
+    val visualSize: Float
 ) {
     fun toCompactString(): String {
         val accelerometerAngleStr = String.format("%.8f", point.pitch)
@@ -29,7 +30,9 @@ data class Poi(
         val deviationComponent =
             String.format("%.4f", deviation).slice(3 until String.format("%.4f", deviation).length)
 
-        return "${name};${accelerometerComponent};${magnetometerComponent};${deviationComponent};"
+        val visualSize = String.format("%.1f", visualSize)
+
+        return "${name};${accelerometerComponent};${magnetometerComponent};${deviationComponent};${visualSize};"
     }
 
     companion object Factory {
@@ -47,6 +50,7 @@ data class Poi(
                     if (subss[i + 2][0].toString() == "-") "-" + "0." + subss[i + 2].slice(1 until subss[i + 2].length)
                     else "0." + subss[i + 2].slice(0 until subss[i + 2].length)
                 val deviation = "0.0" + subss[i + 3]
+                val visualSize = subss[i + 4]
                 val spacePoint =
                     SpacePoint(accelerometerValue.toFloat(), magnetometerValue.toFloat())
                 pois = pois.plus(
@@ -54,7 +58,8 @@ data class Poi(
                         name = label,
                         viewingPointId = 1,
                         point = spacePoint,
-                        deviation = deviation.toFloat()
+                        deviation = deviation.toFloat(),
+                        visualSize = visualSize.toFloat()
                     )
                 )
             }

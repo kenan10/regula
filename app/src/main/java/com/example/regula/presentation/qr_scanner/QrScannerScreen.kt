@@ -19,12 +19,14 @@ import androidx.compose.ui.unit.dp
 import com.example.regula.presentation.common.PermissionsRequest
 import com.example.regula.presentation.destinations.PoiViewerScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanQRCode
 
 @Composable
-@Destination(start = true)
+@Destination
+@RootNavGraph(start = true)
 fun QrScannerScreen(
     navigator: DestinationsNavigator, viewModel: QrScannerViewModel = hiltViewModel()
 ) {
