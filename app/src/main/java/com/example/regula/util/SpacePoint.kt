@@ -28,7 +28,7 @@ class SpacePoint(val pitch: Float, val azimuth: Float) {
             )
             val orientation = FloatArray(3)
             SensorManager.getOrientation(adjustedRotationMatrix, orientation)
-            val azimuth = orientation[0]
+            val azimuth = orientation[2]
             val pitch = orientation[1]
             return SpacePoint(pitch, azimuth)
         }

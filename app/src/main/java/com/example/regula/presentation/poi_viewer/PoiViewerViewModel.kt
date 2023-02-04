@@ -27,7 +27,7 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.abs
 
-const val BUFFER_SIZE = 3
+const val BUFFER_SIZE = 100
 const val DEVIATION = 0.02f
 
 @HiltViewModel
@@ -50,6 +50,7 @@ class PoiViewerViewModel @Inject constructor(
     var isInCircleDistance by mutableStateOf("")
     var showDetails by mutableStateOf(false)
     var isMenuOpened by mutableStateOf(false)
+    var counter by mutableStateOf(0)
 
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
@@ -84,9 +85,9 @@ class PoiViewerViewModel @Inject constructor(
                     val sensorValue = appContext.resources.getString(
                         R.string.sensor_value,
                         "Accelerometer",
-                        values[0].format(3),
-                        values[1].format(3),
-                        values[2].format(3)
+                        accelerometerValue[0].format(3),
+                        accelerometerValue[1].format(3),
+                        accelerometerValue[2].format(3)
                     )
                     accelerometerShowedValue = sensorValue
                 }
@@ -96,6 +97,7 @@ class PoiViewerViewModel @Inject constructor(
             }
         }
         magnetometer.setOnSensorValuesChangedListener { values ->
+            counter++
             if (!isDialogOpened) {
                 magnetometerValue = if (magnetometerRecentValues.size == BUFFER_SIZE)
                     getAverageOf2dFloatList(magnetometerRecentValues)
@@ -117,9 +119,9 @@ class PoiViewerViewModel @Inject constructor(
                     val sensorValue = appContext.resources.getString(
                         R.string.sensor_value,
                         "Magnetometer",
-                        values[0].format(3),
-                        values[1].format(3),
-                        values[2].format(3)
+                        magnetometerValue[0].format(3),
+                        magnetometerValue[1].format(3),
+                        magnetometerValue[2].format(3)
                     )
                     magnetometerShowedValue = sensorValue
                 }
@@ -158,14 +160,18 @@ class PoiViewerViewModel @Inject constructor(
     }
 
     private fun getAverageOf2dFloatList(list: List<List<Float>>): List<Float> {
-        val sum: MutableList<Float> = mutableListOf(0f, 0f, 0f)
+        val sum = FloatArray(3)
+        sum[0] = 0.0f
+        sum[1] = 0.0f
+        sum[2] = 0.0f
+
         for (item: List<Float> in list) {
             sum[0] += item[0]
             sum[1] += item[1]
             sum[2] += item[2]
         }
 
-        return listOf(sum[0] / 3, sum[1] / 3, sum[2] / 3)
+        return listOf(sum[0] / BUFFER_SIZE, sum[1] / BUFFER_SIZE, sum[2] / BUFFER_SIZE)
     }
 
     @SuppressLint("SimpleDateFormat")

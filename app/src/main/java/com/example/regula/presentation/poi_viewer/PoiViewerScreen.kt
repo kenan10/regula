@@ -54,6 +54,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                     DetailsItem(text = viewModel.magnetometerShowedValue)
                     DetailsItem(text = viewModel.angles)
                     DetailsItem(text = viewModel.isInCircleDistance)
+                    DetailsItem(text = viewModel.counter.toString())
                 }
             }
             ReadinessIndicator(
