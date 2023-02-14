@@ -6,6 +6,8 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.icu.text.SimpleDateFormat
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -27,8 +29,9 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.abs
 
-const val BUFFER_SIZE = 100
+const val BUFFER_SIZE = 30
 const val DEVIATION = 0.02f
+const val UPDATE_RATE: Long = 200
 
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
@@ -50,7 +53,8 @@ class PoiViewerViewModel @Inject constructor(
     var isInCircleDistance by mutableStateOf("")
     var showDetails by mutableStateOf(false)
     var isMenuOpened by mutableStateOf(false)
-    var counter by mutableStateOf(0)
+
+    private val handler = Handler(Looper.getMainLooper())
 
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
@@ -64,74 +68,87 @@ class PoiViewerViewModel @Inject constructor(
         magnetometer.startListening()
         accelerometer.setOnSensorValuesChangedListener { values ->
             if (!isDialogOpened) {
-                accelerometerValue = if (accelerometerRecentValues.size == BUFFER_SIZE)
+                val runnable = Runnable {
+                    accelerometerValue = if (accelerometerRecentValues.size == BUFFER_SIZE)
                         getAverageOf2dFloatList(accelerometerRecentValues)
                     else values
 
-                accelerometerRecentValues += if (accelerometerRecentValues.size < BUFFER_SIZE) {
-                    values
-                } else {
-                    accelerometerRecentValues.removeFirst()
-                    values
+                    accelerometerRecentValues += if (accelerometerRecentValues.size < BUFFER_SIZE) {
+                        values
+                    } else {
+                        accelerometerRecentValues.removeFirst()
+                        values
+                    }
+
+                    identifyPoint()
+                    isReady = abs(0 - accelerometerValue[1]) < 0.4
+
+                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
+                        val spacePoint =
+                            SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                        val angle =
+                            "a: ${spacePoint.pitch} b: ${spacePoint.azimuth}"
+                        angles = angle
+
+                        val sensorValue = appContext.resources.getString(
+                            R.string.sensor_value,
+                            "Accelerometer",
+                            accelerometerValue[0].format(3),
+                            accelerometerValue[1].format(3),
+                            accelerometerValue[2].format(3)
+                        )
+                        accelerometerShowedValue = sensorValue
+                    }
                 }
 
-                if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
-                    val spacePoint =
-                        SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                    val angle =
-                        "a: ${spacePoint.pitch} b: ${spacePoint.azimuth}"
-                    angles = angle
-
-                    val sensorValue = appContext.resources.getString(
-                        R.string.sensor_value,
-                        "Accelerometer",
-                        accelerometerValue[0].format(3),
-                        accelerometerValue[1].format(3),
-                        accelerometerValue[2].format(3)
-                    )
-                    accelerometerShowedValue = sensorValue
-                }
-
-                findOutPoint()
-                isReady = abs(0 - values[1]) < 0.4
+                handler.postDelayed({
+                    runnable.run()
+                    handler.removeCallbacks(runnable)
+                }, UPDATE_RATE)
             }
         }
         magnetometer.setOnSensorValuesChangedListener { values ->
-            counter++
             if (!isDialogOpened) {
-                magnetometerValue = if (magnetometerRecentValues.size == BUFFER_SIZE)
-                    getAverageOf2dFloatList(magnetometerRecentValues)
-                else values
+                val runnable = Runnable {
+                    magnetometerValue = if (magnetometerRecentValues.size == BUFFER_SIZE)
+                        getAverageOf2dFloatList(magnetometerRecentValues)
+                    else values
 
-                magnetometerRecentValues += if (magnetometerRecentValues.size < BUFFER_SIZE) {
-                    values
-                } else {
-                    magnetometerRecentValues.removeFirst()
-                    values
+                    magnetometerRecentValues += if (magnetometerRecentValues.size < BUFFER_SIZE) {
+                        values
+                    } else {
+                        magnetometerRecentValues.removeFirst()
+                        values
+                    }
+
+                    identifyPoint()
+
+                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
+                        val spacePoint =
+                            SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                        val angle =
+                            "a: ${spacePoint.pitch} b: ${spacePoint.azimuth}"
+                        angles = angle
+                        val sensorValue = appContext.resources.getString(
+                            R.string.sensor_value,
+                            "Magnetometer",
+                            magnetometerValue[0].format(3),
+                            magnetometerValue[1].format(3),
+                            magnetometerValue[2].format(3)
+                        )
+                        magnetometerShowedValue = sensorValue
+                    }
                 }
 
-                if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
-                    val spacePoint =
-                        SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                    val angle =
-                        "a: ${spacePoint.pitch} b: ${spacePoint.azimuth}"
-                    angles = angle
-                    val sensorValue = appContext.resources.getString(
-                        R.string.sensor_value,
-                        "Magnetometer",
-                        magnetometerValue[0].format(3),
-                        magnetometerValue[1].format(3),
-                        magnetometerValue[2].format(3)
-                    )
-                    magnetometerShowedValue = sensorValue
-                }
-
-                findOutPoint()
+                handler.postDelayed({
+                    runnable.run()
+                    handler.removeCallbacks(runnable)
+                }, UPDATE_RATE)
             }
         }
     }
 
-    private fun findOutPoint() {
+    private fun identifyPoint() {
         if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && isReady) {
 
             val currentPointSpace =
