@@ -41,7 +41,7 @@ data class Poi(
             subss = subss.slice(0 until subss.size - 1)
             var pois = emptyList<Poi>()
 
-            for (i in subss.indices step 4) {
+            for (i in subss.indices step 5) {
                 val label = subss[i]
                 val accelerometerValue =
                     if (subss[i + 1][0].toString() == "-") "-" + "0." + subss[i + 1].slice(1 until subss[i + 1].length)

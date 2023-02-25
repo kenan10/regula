@@ -27,7 +27,7 @@ abstract class AndroidSensor(
             sensor = sensorManager.getDefaultSensor(sensorType)
         }
         sensor?.let {
-            sensorManager.registerListener(this, it, 30000)
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
     }
 
