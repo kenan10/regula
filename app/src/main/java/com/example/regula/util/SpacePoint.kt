@@ -23,12 +23,12 @@ class SpacePoint(val pitch: Float, val azimuth: Float) {
             )
             SensorManager.remapCoordinateSystem(
                 rotationMatrix,
-                SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X,
+                SensorManager.AXIS_Z, SensorManager.AXIS_X,
                 adjustedRotationMatrix
             )
             val orientation = FloatArray(3)
             SensorManager.getOrientation(adjustedRotationMatrix, orientation)
-            val azimuth = orientation[2]
+            val azimuth = orientation[0]
             val pitch = orientation[1]
             return SpacePoint(pitch, azimuth)
         }
