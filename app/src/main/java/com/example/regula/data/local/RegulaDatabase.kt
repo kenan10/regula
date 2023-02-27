@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [PoiEntity::class, ViewingPointEntity::class],
-    version = 3
+    version = 4
 )
 abstract class RegulaDatabase : RoomDatabase() {
     abstract val dao: RegulaDao

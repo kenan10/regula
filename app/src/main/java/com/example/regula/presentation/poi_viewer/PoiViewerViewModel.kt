@@ -27,11 +27,13 @@ import java.io.File
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.math.abs
+import kotlinx.coroutines.*
+import kotlin.math.*
 
 const val BUFFER_SIZE = 30
 const val DEVIATION = 0.02f
-const val UPDATE_RATE: Long = 200
+const val UPDATE_DELAY: Long = 150
+const val USER_HEIGHT = 1.48f
 
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
@@ -42,32 +44,40 @@ class PoiViewerViewModel @Inject constructor(
 ) : ViewModel() {
     var radius by mutableStateOf(0f)
     var newRadius by mutableStateOf(0f)
+    var distanceToBase by mutableStateOf(0f)
     var currentPointName by mutableStateOf("")
     var userPoints by mutableStateOf(emptyList<Poi>())
     var accelerometerShowedValue by mutableStateOf("")
     var magnetometerShowedValue by mutableStateOf("")
     var isReady by mutableStateOf(false)
+    var freezeSensors by mutableStateOf(false)
     var isDialogOpened by mutableStateOf(false)
+    var showSetDistanceToBaseBtn by mutableStateOf(false)
     var newPointName by mutableStateOf("")
     var angles by mutableStateOf("")
     var isInCircleDistance by mutableStateOf("")
     var showDetails by mutableStateOf(false)
     var isMenuOpened by mutableStateOf(false)
+    var distance by mutableStateOf(0f)
 
     private val handler = Handler(Looper.getMainLooper())
 
+    private var newPointAccelerometerValue: List<Float> = emptyList()
+    private var newPointMagnetometerValue: List<Float> = emptyList()
     private var accelerometerValue: List<Float> = emptyList()
     private var magnetometerValue: List<Float> = emptyList()
     private var accelerometerRecentValues: MutableList<List<Float>> =
         emptyList<List<Float>>().toMutableList()
     private var magnetometerRecentValues: MutableList<List<Float>> =
         emptyList<List<Float>>().toMutableList()
+    private var currentSpacePoint = SpacePoint(0f, 0f)
+    private var correctionDistance: Float = 0f
 
     init {
         accelerometer.startListening()
         magnetometer.startListening()
         accelerometer.setOnSensorValuesChangedListener { values ->
-            if (!isDialogOpened) {
+            if (!freezeSensors) {
                 val runnable = Runnable {
                     accelerometerValue = if (accelerometerRecentValues.size == BUFFER_SIZE)
                         getAverageOf2dFloatList(accelerometerRecentValues)
@@ -83,32 +93,37 @@ class PoiViewerViewModel @Inject constructor(
                     identifyPoint()
                     isReady = abs(0 - accelerometerValue[1]) < 0.4
 
-                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
-                        val spacePoint =
+                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                        currentSpacePoint =
                             SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                        val angle =
-                            "a: ${spacePoint.pitch} b: ${spacePoint.azimuth}"
-                        angles = angle
 
-                        val sensorValue = appContext.resources.getString(
-                            R.string.sensor_value,
-                            "Accelerometer",
-                            accelerometerValue[0].format(3),
-                            accelerometerValue[1].format(3),
-                            accelerometerValue[2].format(3)
-                        )
-                        accelerometerShowedValue = sensorValue
+                        if (showDetails) {
+                            distance =
+                                (tan(currentSpacePoint.pitch + (PI / 2)) * USER_HEIGHT).toFloat()
+                            val angle =
+                                "a: ${currentSpacePoint.pitch} b: ${currentSpacePoint.azimuth}"
+                            angles = angle
+
+                            val sensorValue = appContext.resources.getString(
+                                R.string.sensor_value,
+                                "Accelerometer",
+                                accelerometerValue[0].format(3),
+                                accelerometerValue[1].format(3),
+                                accelerometerValue[2].format(3)
+                            )
+                            accelerometerShowedValue = sensorValue
+                        }
                     }
                 }
 
                 handler.postDelayed({
                     runnable.run()
                     handler.removeCallbacks(runnable)
-                }, UPDATE_RATE)
+                }, UPDATE_DELAY)
             }
         }
         magnetometer.setOnSensorValuesChangedListener { values ->
-            if (!isDialogOpened) {
+            if (!freezeSensors) {
                 val runnable = Runnable {
                     magnetometerValue = if (magnetometerRecentValues.size == BUFFER_SIZE)
                         getAverageOf2dFloatList(magnetometerRecentValues)
@@ -124,10 +139,8 @@ class PoiViewerViewModel @Inject constructor(
                     identifyPoint()
 
                     if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
-                        val spacePoint =
-                            SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
                         val angle =
-                            "a: ${spacePoint.pitch} b: ${spacePoint.azimuth}"
+                            "a: ${currentSpacePoint.pitch} b: ${currentSpacePoint.azimuth}"
                         angles = angle
                         val sensorValue = appContext.resources.getString(
                             R.string.sensor_value,
@@ -143,22 +156,24 @@ class PoiViewerViewModel @Inject constructor(
                 handler.postDelayed({
                     runnable.run()
                     handler.removeCallbacks(runnable)
-                }, UPDATE_RATE)
+                }, UPDATE_DELAY)
             }
         }
     }
 
     private fun identifyPoint() {
         if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && isReady) {
-
-            val currentPointSpace =
-                SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-
             viewModelScope.launch {
                 userPoints = userPointRepository.getAllPois()
             }
+            if (correctionDistance > 0f) {
+                userPoints.forEach {
+                    it.point.pitch =
+                        atan((it.distance + correctionDistance) / (it.distance / tan(it.point.pitch)))
+                }
+            }
             val currentPoint = userPoints.find {
-                currentPointSpace.isInCircle(
+                currentSpacePoint.isInCircle(
                     center = it.point, deviation = it.deviation
                 )
             }
@@ -174,6 +189,20 @@ class PoiViewerViewModel @Inject constructor(
             currentPointName = "unknown"
             radius = 0f
         }
+    }
+
+    fun recomputeAngles() {
+        correctionDistance = distance
+    }
+
+    fun closeDialog() {
+        freezeSensors = false
+        isDialogOpened = false
+    }
+
+    fun freezeSensorsValues() {
+        newPointMagnetometerValue = magnetometerValue
+        newPointAccelerometerValue = accelerometerValue
     }
 
     private fun getAverageOf2dFloatList(list: List<List<Float>>): List<Float> {
@@ -230,10 +259,14 @@ class PoiViewerViewModel @Inject constructor(
             userPointRepository.insertPoi(
                 Poi(
                     name = newPointName,
-                    point = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue),
+                    point = SpacePoint.fromSensorsValues(
+                        newPointAccelerometerValue,
+                        newPointMagnetometerValue
+                    ),
                     deviation = DEVIATION,
                     viewingPointId = 1,
-                    visualSize = newRadius
+                    visualSize = newRadius,
+                    distance = distanceToBase
                 )
             )
             userPoints = userPointRepository.getAllPois()

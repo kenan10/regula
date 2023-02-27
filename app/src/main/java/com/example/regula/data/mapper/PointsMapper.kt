@@ -10,7 +10,8 @@ fun PoiEntity.toPoi(): Poi {
         deviation = deviation,
         viewingPointId = viewingPointId,
         point = SpacePoint(accelerometerAngle, magnetometerAngle),
-        visualSize = visualSize
+        visualSize = visualSize,
+        distance = distance
     )
 }
 
@@ -21,6 +22,7 @@ fun Poi.toPoiEntity(): PoiEntity {
         viewingPointId = viewingPointId,
         accelerometerAngle = point.pitch,
         magnetometerAngle = point.azimuth,
-        visualSize = visualSize
+        visualSize = visualSize,
+        distance = distance
     )
 }

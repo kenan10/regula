@@ -11,5 +11,6 @@ data class PoiEntity(
     val accelerometerAngle: Float,
     val magnetometerAngle: Float,
     val deviation: Float,
-    val visualSize: Float
+    val visualSize: Float,
+    val distance: Float
 )

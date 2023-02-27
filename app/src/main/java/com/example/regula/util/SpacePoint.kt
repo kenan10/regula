@@ -3,7 +3,7 @@ package com.example.regula.util
 import android.hardware.SensorManager
 import kotlin.math.pow
 
-class SpacePoint(val pitch: Float, val azimuth: Float) {
+class SpacePoint(var pitch: Float, var azimuth: Float) {
     companion object Factory {
         /**
          * Factory method to create [SpacePoint] from accelerometer and magnetometer sensors

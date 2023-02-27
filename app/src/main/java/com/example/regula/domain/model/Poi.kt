@@ -7,8 +7,10 @@ data class Poi(
     val viewingPointId: Int,
     val point: SpacePoint,
     val deviation: Float,
-    val visualSize: Float
+    val visualSize: Float,
+    val distance: Float
 ) {
+
     fun toCompactString(): String {
         val accelerometerAngleStr = String.format("%.8f", point.pitch)
         val accelerometerComponent =
@@ -32,7 +34,9 @@ data class Poi(
 
         val visualSize = String.format("%.1f", visualSize)
 
-        return "${name};${accelerometerComponent};${magnetometerComponent};${deviationComponent};${visualSize};"
+        val distance = String.format("%.2f", distance)
+
+        return "${name};${accelerometerComponent};${magnetometerComponent};${deviationComponent};${visualSize};${distance};"
     }
 
     companion object Factory {
@@ -41,7 +45,7 @@ data class Poi(
             subss = subss.slice(0 until subss.size - 1)
             var pois = emptyList<Poi>()
 
-            for (i in subss.indices step 5) {
+            for (i in subss.indices step 6) {
                 val label = subss[i]
                 val accelerometerValue =
                     if (subss[i + 1][0].toString() == "-") "-" + "0." + subss[i + 1].slice(1 until subss[i + 1].length)
@@ -51,6 +55,7 @@ data class Poi(
                     else "0." + subss[i + 2].slice(0 until subss[i + 2].length)
                 val deviation = "0.0" + subss[i + 3]
                 val visualSize = subss[i + 4]
+                val distance = subss[i + 5]
                 val spacePoint =
                     SpacePoint(accelerometerValue.toFloat(), magnetometerValue.toFloat())
                 pois = pois.plus(
@@ -59,7 +64,8 @@ data class Poi(
                         viewingPointId = 1,
                         point = spacePoint,
                         deviation = deviation.toFloat(),
-                        visualSize = visualSize.toFloat()
+                        visualSize = visualSize.toFloat(),
+                        distance = distance.toFloat()
                     )
                 )
             }

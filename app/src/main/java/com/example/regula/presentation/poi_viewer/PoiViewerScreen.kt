@@ -54,6 +54,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                     DetailsItem(text = viewModel.magnetometerShowedValue)
                     DetailsItem(text = viewModel.angles)
                     DetailsItem(text = viewModel.isInCircleDistance)
+                    DetailsItem(text = "Distance " + viewModel.distance)
                 }
             }
             ReadinessIndicator(
@@ -86,7 +87,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(x = 70.dp, y = (-40).dp),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 modifier = Modifier.background(Color.White),
@@ -97,10 +98,29 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
         Row(
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dp(5f))
         ) {
-            Button(onClick = {
-                if (viewModel.isReady) viewModel.isDialogOpened = true
-            }) {
-                Text(text = "Add point")
+            if (viewModel.showSetDistanceToBaseBtn) {
+                Button(onClick = {
+                    viewModel.distanceToBase = viewModel.distance
+                    viewModel.freezeSensors = true
+                    viewModel.isDialogOpened = true
+                    viewModel.showSetDistanceToBaseBtn = false
+                }) {
+                    Text(text = "Set")
+                }
+            } else {
+                Button(onClick = {
+                    if (viewModel.isReady) {
+                        viewModel.freezeSensorsValues()
+                        viewModel.showSetDistanceToBaseBtn = true
+                    }
+                }) {
+                    Text(text = "Add point")
+                }
+                Button(onClick = {
+                    if (viewModel.isReady) viewModel.recomputeAngles()
+                }) {
+                    Text(text = "Recompute angles")
+                }
             }
         }
     }
@@ -129,28 +149,34 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
         )
     }
     if (viewModel.isDialogOpened) {
-        AlertDialog(modifier = Modifier, onDismissRequest = { viewModel.isDialogOpened = false }, confirmButton = {
-            Button(onClick = {
-                viewModel.saveCurrentObject()
-                viewModel.currentPointName = ""
-                viewModel.isDialogOpened = false
-                viewModel.newRadius = 0.0f
-            }, content = { Text("Add") })
-        }, dismissButton = {
-            Button(onClick = { viewModel.isDialogOpened = false },
-                content = { Text(text = "Cancel") })
-        }, text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Dp(3f))) {
-                TextField(value = viewModel.newPointName, onValueChange = { newText ->
-                    viewModel.newPointName = newText
-                }, placeholder = { Text(text = "Point name") })
-                Slider(
-                    value = viewModel.newRadius,
-                    onValueChange = { viewModel.newRadius = it },
-                    valueRange = MIN_VISUAL_SIZE..MAX_VISUAL_SIZE
-                )
-            }
-        })
+        AlertDialog(
+            modifier = Modifier,
+            onDismissRequest = { viewModel.closeDialog() },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.saveCurrentObject()
+                    viewModel.currentPointName = ""
+                    viewModel.isDialogOpened = false
+                    viewModel.freezeSensors = false
+                    viewModel.newRadius = 0.0f
+                }, content = { Text("Add") })
+            },
+            dismissButton = {
+                Button(onClick = { viewModel.closeDialog() },
+                    content = { Text(text = "Cancel") })
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dp(3f))) {
+                    TextField(value = viewModel.newPointName, onValueChange = { newText ->
+                        viewModel.newPointName = newText
+                    }, placeholder = { Text(text = "Point name") })
+                    Slider(
+                        value = viewModel.newRadius,
+                        onValueChange = { viewModel.newRadius = it },
+                        valueRange = MIN_VISUAL_SIZE..MAX_VISUAL_SIZE
+                    )
+                }
+            })
     }
 }
 
