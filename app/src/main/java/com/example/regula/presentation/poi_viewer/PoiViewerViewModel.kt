@@ -15,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.regula.R
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.sensors.MeasurableSensor
@@ -30,8 +29,8 @@ import javax.inject.Named
 import kotlinx.coroutines.*
 import kotlin.math.*
 
-const val BUFFER_SIZE = 30
-const val DEVIATION = 0.02f
+const val BUFFER_SIZE = 15
+const val DEVIATION = 0.008f
 const val UPDATE_DELAY: Long = 150
 const val USER_HEIGHT = 1.48f
 
@@ -42,36 +41,37 @@ class PoiViewerViewModel @Inject constructor(
     private val appContext: Application,
     private val userPointRepository: PointsRepository,
 ) : ViewModel() {
-    var radius by mutableStateOf(0f)
+    // State for new point creation
     var newRadius by mutableStateOf(0f)
     var distanceToBase by mutableStateOf(0f)
+    var newPointName by mutableStateOf("")
+    private var newPointSpacePoint = SpacePoint(0f, 0f)
+
+    // State of current point
+    var radius by mutableStateOf(0f)
     var currentPointName by mutableStateOf("")
-    var userPoints by mutableStateOf(emptyList<Poi>())
-    var accelerometerShowedValue by mutableStateOf("")
-    var magnetometerShowedValue by mutableStateOf("")
+
+    // Details
+    var distance by mutableStateOf(0f)
+
+    // UI state
     var isReady by mutableStateOf(false)
     var freezeSensors by mutableStateOf(false)
     var isDialogOpened by mutableStateOf(false)
     var showSetDistanceToBaseBtn by mutableStateOf(false)
-    var newPointName by mutableStateOf("")
-    var angles by mutableStateOf("")
-    var isInCircleDistance by mutableStateOf("")
     var showDetails by mutableStateOf(false)
     var isMenuOpened by mutableStateOf(false)
-    var distance by mutableStateOf(0f)
+
+    // Used for computation and point identification
+    private var userPoints = emptyList<Poi>()
+    var accelerometerValue: List<Float> = emptyList()
+    private var accelerometerRecentValues = emptyList<List<Float>>().toMutableList()
+    var magnetometerValue: List<Float> = emptyList()
+    private var magnetometerRecentValues = emptyList<List<Float>>().toMutableList()
+    var currentSpacePoint = SpacePoint(0f, 0f)
+    private var correctionDistance: Float = 0f
 
     private val handler = Handler(Looper.getMainLooper())
-
-    private var newPointAccelerometerValue: List<Float> = emptyList()
-    private var newPointMagnetometerValue: List<Float> = emptyList()
-    private var accelerometerValue: List<Float> = emptyList()
-    private var magnetometerValue: List<Float> = emptyList()
-    private var accelerometerRecentValues: MutableList<List<Float>> =
-        emptyList<List<Float>>().toMutableList()
-    private var magnetometerRecentValues: MutableList<List<Float>> =
-        emptyList<List<Float>>().toMutableList()
-    private var currentSpacePoint = SpacePoint(0f, 0f)
-    private var correctionDistance: Float = 0f
 
     init {
         accelerometer.startListening()
@@ -83,36 +83,19 @@ class PoiViewerViewModel @Inject constructor(
                         getAverageOf2dFloatList(accelerometerRecentValues)
                     else values
 
-                    accelerometerRecentValues += if (accelerometerRecentValues.size < BUFFER_SIZE) {
+                    accelerometerRecentValues += if (accelerometerRecentValues.size < BUFFER_SIZE)
                         values
-                    } else {
+                    else {
                         accelerometerRecentValues.removeFirst()
                         values
                     }
 
-                    identifyPoint()
                     isReady = abs(0 - accelerometerValue[1]) < 0.4
 
                     if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
-                        currentSpacePoint =
-                            SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-
-                        if (showDetails) {
-                            distance =
-                                (tan(currentSpacePoint.pitch + (PI / 2)) * USER_HEIGHT).toFloat()
-                            val angle =
-                                "a: ${currentSpacePoint.pitch} b: ${currentSpacePoint.azimuth}"
-                            angles = angle
-
-                            val sensorValue = appContext.resources.getString(
-                                R.string.sensor_value,
-                                "Accelerometer",
-                                accelerometerValue[0].format(3),
-                                accelerometerValue[1].format(3),
-                                accelerometerValue[2].format(3)
-                            )
-                            accelerometerShowedValue = sensorValue
-                        }
+                        currentSpacePoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
+                        identifyPoint()
+                        distance = (tan(currentSpacePoint.pitch + (PI / 2)) * USER_HEIGHT).toFloat()
                     }
                 }
 
@@ -136,20 +119,8 @@ class PoiViewerViewModel @Inject constructor(
                         values
                     }
 
-                    identifyPoint()
-
-                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && showDetails) {
-                        val angle =
-                            "a: ${currentSpacePoint.pitch} b: ${currentSpacePoint.azimuth}"
-                        angles = angle
-                        val sensorValue = appContext.resources.getString(
-                            R.string.sensor_value,
-                            "Magnetometer",
-                            magnetometerValue[0].format(3),
-                            magnetometerValue[1].format(3),
-                            magnetometerValue[2].format(3)
-                        )
-                        magnetometerShowedValue = sensorValue
+                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
+                        identifyPoint()
                     }
                 }
 
@@ -162,7 +133,7 @@ class PoiViewerViewModel @Inject constructor(
     }
 
     private fun identifyPoint() {
-        if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty() && isReady) {
+        if (isReady) {
             viewModelScope.launch {
                 userPoints = userPointRepository.getAllPois()
             }
@@ -174,7 +145,7 @@ class PoiViewerViewModel @Inject constructor(
             }
             val currentPoint = userPoints.find {
                 currentSpacePoint.isInCircle(
-                    center = it.point, deviation = it.deviation
+                    center = it.point, deviation = DEVIATION
                 )
             }
             if (currentPoint != null) {
@@ -201,8 +172,7 @@ class PoiViewerViewModel @Inject constructor(
     }
 
     fun freezeSensorsValues() {
-        newPointMagnetometerValue = magnetometerValue
-        newPointAccelerometerValue = accelerometerValue
+        newPointSpacePoint = currentSpacePoint
     }
 
     private fun getAverageOf2dFloatList(list: List<List<Float>>): List<Float> {
@@ -259,20 +229,13 @@ class PoiViewerViewModel @Inject constructor(
             userPointRepository.insertPoi(
                 Poi(
                     name = newPointName,
-                    point = SpacePoint.fromSensorsValues(
-                        newPointAccelerometerValue,
-                        newPointMagnetometerValue
-                    ),
+                    point = newPointSpacePoint,
                     deviation = DEVIATION,
                     viewingPointId = 1,
                     visualSize = newRadius,
                     distance = distanceToBase
                 )
             )
-            userPoints = userPointRepository.getAllPois()
-            println(userPoints)
         }
     }
-
-    private fun Float.format(digits: Int) = "%.${digits}f".format(this)
 }

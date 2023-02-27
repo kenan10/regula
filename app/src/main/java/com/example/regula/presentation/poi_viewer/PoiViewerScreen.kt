@@ -28,10 +28,10 @@ import com.example.regula.presentation.common.PermissionsRequest
 import com.ramcosta.composedestinations.annotation.Destination
 
 const val MIN_VISUAL_SIZE = 7f
-const val MAX_VISUAL_SIZE = 30f
+const val MAX_VISUAL_SIZE = 20f
 
 @Composable
-@Destination()
+@Destination
 fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
     val activity = LocalContext.current as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -50,11 +50,21 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
         ) {
             if (viewModel.showDetails) {
                 Column(modifier = Modifier.widthIn(max = 500.dp)) {
-                    DetailsItem(text = viewModel.accelerometerShowedValue)
-                    DetailsItem(text = viewModel.magnetometerShowedValue)
-                    DetailsItem(text = viewModel.angles)
-                    DetailsItem(text = viewModel.isInCircleDistance)
-                    DetailsItem(text = "Distance " + viewModel.distance)
+                    DetailsItem(
+                        text = "Accelerometer: ${viewModel.accelerometerValue[0].format(3)}; " +
+                                "${(viewModel.accelerometerValue[1]).format(3)}; " +
+                                "${viewModel.accelerometerValue[2].format(3)};"
+                    )
+                    DetailsItem(
+                        text = "Magnetometer: ${viewModel.magnetometerValue[0].format(3)}; " +
+                                "${viewModel.magnetometerValue[1].format(3)}; " +
+                                "${viewModel.magnetometerValue[2].format(3)};"
+                    )
+                    DetailsItem(
+                        text = "Pitch: ${viewModel.currentSpacePoint.pitch.format(4)} " +
+                                "Azim: ${viewModel.currentSpacePoint.azimuth.format(4)}"
+                    )
+                    DetailsItem(text = "Distance: ${viewModel.distance.format(2)}")
                 }
             }
             ReadinessIndicator(
@@ -149,8 +159,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
         )
     }
     if (viewModel.isDialogOpened) {
-        AlertDialog(
-            modifier = Modifier,
+        AlertDialog(modifier = Modifier,
             onDismissRequest = { viewModel.closeDialog() },
             confirmButton = {
                 Button(onClick = {
@@ -162,8 +171,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                 }, content = { Text("Add") })
             },
             dismissButton = {
-                Button(onClick = { viewModel.closeDialog() },
-                    content = { Text(text = "Cancel") })
+                Button(onClick = { viewModel.closeDialog() }, content = { Text(text = "Cancel") })
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Dp(3f))) {
@@ -196,7 +204,10 @@ fun ReadinessIndicator(modifier: Modifier = Modifier, isReady: Boolean) {
 @Composable
 fun DetailsItem(text: String) {
     Text(
-        text = text,
-        modifier = Modifier.background(Color.White)
+        text = text, modifier = Modifier.background(Color.White)
     )
+}
+
+private fun Float.format(digits: Int): String {
+    return String.format("%.${digits}f", this)
 }

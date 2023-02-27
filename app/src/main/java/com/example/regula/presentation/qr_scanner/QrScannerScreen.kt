@@ -1,6 +1,8 @@
 package com.example.regula.presentation.qr_scanner
 
 import android.Manifest
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.regula.presentation.common.PermissionsRequest
 import com.example.regula.presentation.destinations.PoiViewerScreenDestination
@@ -30,6 +33,9 @@ import io.github.g00fy2.quickie.ScanQRCode
 fun QrScannerScreen(
     navigator: DestinationsNavigator, viewModel: QrScannerViewModel = hiltViewModel()
 ) {
+    val activity = LocalContext.current as Activity
+    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+
     PermissionsRequest(listOf(Manifest.permission.CAMERA))
     val scanQrCodeLauncher = rememberLauncherForActivityResult(ScanQRCode()) { result ->
         viewModel.qrCodeText = when (result) {
