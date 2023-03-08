@@ -6,8 +6,6 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.icu.text.SimpleDateFormat
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -17,27 +15,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.repository.PointsRepository
-import com.example.regula.sensors.MeasurableSensor
-import com.example.regula.util.SpacePoint
+import com.example.regula.tools.OrientationSensor
+import com.example.regula.tools.SpacePoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.g0dkar.qrcode.QRCode
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
-import kotlinx.coroutines.*
 import kotlin.math.*
 
-const val BUFFER_SIZE = 15
-const val DEVIATION = 0.008f
-const val UPDATE_DELAY: Long = 150
+const val DEVIATION = 2.0f
 const val USER_HEIGHT = 1.48f
 
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
-    @Named("accelerometer") private val accelerometer: MeasurableSensor,
-    @Named("magnetometer") private val magnetometer: MeasurableSensor,
+    @Named("orientationSensor") private val orientationSensor: OrientationSensor,
     private val appContext: Application,
     private val userPointRepository: PointsRepository,
 ) : ViewModel() {
@@ -52,10 +46,11 @@ class PoiViewerViewModel @Inject constructor(
     var currentPointName by mutableStateOf("")
 
     // Details
+    var rollForDisplay by mutableStateOf(0f)
     var distance by mutableStateOf(0f)
 
     // UI state
-    var isReady by mutableStateOf(false)
+    var isReady by mutableStateOf(true)
     var freezeSensors by mutableStateOf(false)
     var isDialogOpened by mutableStateOf(false)
     var showSetDistanceToBaseBtn by mutableStateOf(false)
@@ -64,70 +59,26 @@ class PoiViewerViewModel @Inject constructor(
 
     // Used for computation and point identification
     private var userPoints = emptyList<Poi>()
-    var accelerometerValue: List<Float> = emptyList()
-    private var accelerometerRecentValues = emptyList<List<Float>>().toMutableList()
-    var magnetometerValue: List<Float> = emptyList()
-    private var magnetometerRecentValues = emptyList<List<Float>>().toMutableList()
     var currentSpacePoint = SpacePoint(0f, 0f)
     private var correctionDistance: Float = 0f
 
-    private val handler = Handler(Looper.getMainLooper())
-
     init {
-        accelerometer.startListening()
-        magnetometer.startListening()
-        accelerometer.setOnSensorValuesChangedListener { values ->
-            if (!freezeSensors) {
-                val runnable = Runnable {
-                    accelerometerValue = if (accelerometerRecentValues.size == BUFFER_SIZE)
-                        getAverageOf2dFloatList(accelerometerRecentValues)
-                    else values
+        setupOrientationSensor()
+        orientationSensor.start()
+    }
 
-                    accelerometerRecentValues += if (accelerometerRecentValues.size < BUFFER_SIZE)
-                        values
-                    else {
-                        accelerometerRecentValues.removeFirst()
-                        values
-                    }
+    private fun setupOrientationSensor() {
+        val cl: OrientationSensor.OrientationListener = getOrientationSensorListener()
+        orientationSensor.setListener(cl)
+    }
 
-                    isReady = abs(0 - accelerometerValue[1]) < 0.4
-
-                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
-                        currentSpacePoint = SpacePoint.fromSensorsValues(accelerometerValue, magnetometerValue)
-                        identifyPoint()
-                        distance = (tan(currentSpacePoint.pitch + (PI / 2)) * USER_HEIGHT).toFloat()
-                    }
-                }
-
-                handler.postDelayed({
-                    runnable.run()
-                    handler.removeCallbacks(runnable)
-                }, UPDATE_DELAY)
-            }
-        }
-        magnetometer.setOnSensorValuesChangedListener { values ->
-            if (!freezeSensors) {
-                val runnable = Runnable {
-                    magnetometerValue = if (magnetometerRecentValues.size == BUFFER_SIZE)
-                        getAverageOf2dFloatList(magnetometerRecentValues)
-                    else values
-
-                    magnetometerRecentValues += if (magnetometerRecentValues.size < BUFFER_SIZE) {
-                        values
-                    } else {
-                        magnetometerRecentValues.removeFirst()
-                        values
-                    }
-
-                    if (accelerometerValue.isNotEmpty() && magnetometerValue.isNotEmpty()) {
-                        identifyPoint()
-                    }
-                }
-
-                handler.postDelayed({
-                    runnable.run()
-                    handler.removeCallbacks(runnable)
-                }, UPDATE_DELAY)
+    private fun getOrientationSensorListener(): OrientationSensor.OrientationListener {
+        return object : OrientationSensor.OrientationListener {
+            override fun onNewOrientation(azimuth: Float, pitch: Float, roll: Float) {
+                currentSpacePoint = SpacePoint(pitch, azimuth)
+                rollForDisplay = roll
+                identifyPoint()
+                distance = (tan(currentSpacePoint.pitch + (PI / 2)) * USER_HEIGHT).toFloat()
             }
         }
     }
@@ -153,11 +104,11 @@ class PoiViewerViewModel @Inject constructor(
                 currentPointName = currentPoint.name
             } else {
                 radius = 0f
-                currentPointName = "unknown"
+                currentPointName = ""
             }
 
         } else {
-            currentPointName = "unknown"
+            currentPointName = ""
             radius = 0f
         }
     }
@@ -173,21 +124,6 @@ class PoiViewerViewModel @Inject constructor(
 
     fun freezeSensorsValues() {
         newPointSpacePoint = currentSpacePoint
-    }
-
-    private fun getAverageOf2dFloatList(list: List<List<Float>>): List<Float> {
-        val sum = FloatArray(3)
-        sum[0] = 0.0f
-        sum[1] = 0.0f
-        sum[2] = 0.0f
-
-        for (item: List<Float> in list) {
-            sum[0] += item[0]
-            sum[1] += item[1]
-            sum[2] += item[2]
-        }
-
-        return listOf(sum[0] / BUFFER_SIZE, sum[1] / BUFFER_SIZE, sum[2] / BUFFER_SIZE)
     }
 
     @SuppressLint("SimpleDateFormat")

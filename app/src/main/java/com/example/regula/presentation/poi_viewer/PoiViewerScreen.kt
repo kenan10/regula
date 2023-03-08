@@ -51,18 +51,9 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             if (viewModel.showDetails) {
                 Column(modifier = Modifier.widthIn(max = 500.dp)) {
                     DetailsItem(
-                        text = "Accelerometer: ${viewModel.accelerometerValue[0].format(3)}; " +
-                                "${(viewModel.accelerometerValue[1]).format(3)}; " +
-                                "${viewModel.accelerometerValue[2].format(3)};"
-                    )
-                    DetailsItem(
-                        text = "Magnetometer: ${viewModel.magnetometerValue[0].format(3)}; " +
-                                "${viewModel.magnetometerValue[1].format(3)}; " +
-                                "${viewModel.magnetometerValue[2].format(3)};"
-                    )
-                    DetailsItem(
                         text = "Pitch: ${viewModel.currentSpacePoint.pitch.format(4)} " +
-                                "Azim: ${viewModel.currentSpacePoint.azimuth.format(4)}"
+                                "Azim: ${viewModel.currentSpacePoint.azimuth.format(4)} " +
+                                "Roll: ${viewModel.rollForDisplay.format(4)}"
                     )
                     DetailsItem(text = "Distance: ${viewModel.distance.format(2)}")
                 }

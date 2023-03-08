@@ -1,6 +1,6 @@
 package com.example.regula.domain.model
 
-import com.example.regula.util.SpacePoint
+import com.example.regula.tools.SpacePoint
 
 data class Poi(
     val name: String,

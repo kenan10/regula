@@ -2,7 +2,7 @@ package com.example.regula.data.mapper
 
 import com.example.regula.data.local.PoiEntity
 import com.example.regula.domain.model.Poi
-import com.example.regula.util.SpacePoint
+import com.example.regula.tools.SpacePoint
 
 fun PoiEntity.toPoi(): Poi {
     return Poi(

@@ -1,4 +1,4 @@
-package com.example.regula.util
+package com.example.regula.tools
 
 import android.hardware.SensorManager
 import kotlin.math.pow
