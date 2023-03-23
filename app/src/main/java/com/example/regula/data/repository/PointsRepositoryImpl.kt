@@ -6,6 +6,7 @@ import com.example.regula.data.mapper.toPoiEntity
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.model.ViewingPoint
 import com.example.regula.domain.repository.PointsRepository
+import com.example.regula.tools.SpacePoint
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,6 +21,10 @@ class PointsRepositoryImpl @Inject constructor(db: RegulaDatabase) :
 
     override suspend fun insertPoi(userPoint: Poi) {
         dao.insertPoi(userPoint.toPoiEntity())
+    }
+
+    override suspend fun setCoordinates(newSpacePoint: SpacePoint, name: String) {
+        dao.updateCoordinatesByName(name, newSpacePoint.pitch, newSpacePoint.azimuth)
     }
 
     override suspend fun insertViewingPoint(viewingPoint: ViewingPoint) {

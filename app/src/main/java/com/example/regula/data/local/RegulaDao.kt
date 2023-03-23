@@ -16,6 +16,12 @@ interface RegulaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertViewingPoint(viewingPoint: ViewingPointEntity)
 
+    @Query("UPDATE PoiEntity SET " +
+            "accelerometerAngle = :accelerometerAngle," +
+            "magnetometerAngle = :magnetometerAngle " +
+            "WHERE name = :name")
+    suspend fun updateCoordinatesByName(name: String, accelerometerAngle: Float, magnetometerAngle: Float)
+
     @Query("SELECT * FROM ViewingPointEntity")
     suspend fun getAllViewingPoints(): List<ViewingPointEntity>
 

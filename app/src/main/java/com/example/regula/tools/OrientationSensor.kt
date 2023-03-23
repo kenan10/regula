@@ -5,6 +5,8 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
+import kotlin.math.abs
 
 class OrientationSensor(context: Context) : SensorEventListener {
     interface OrientationListener {
@@ -50,7 +52,7 @@ class OrientationSensor(context: Context) : SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        val alpha = 0.97f
+        val alpha = 0.8f
         synchronized(this) {
             if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
                 gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0]
@@ -71,12 +73,11 @@ class OrientationSensor(context: Context) : SensorEventListener {
 
                 SensorManager.remapCoordinateSystem(
                     R,
-                    SensorManager.AXIS_Y, SensorManager.AXIS_X,
+                    SensorManager.AXIS_X, SensorManager.AXIS_Y,
                     adjustedR
                 )
                 SensorManager.getOrientation(adjustedR, orientation)
-                pitch = Math.toDegrees(orientation[1].toDouble()).toFloat()
-                pitch = (pitch + 180) % 180
+                pitch = abs(orientation[2])
 
                 SensorManager.remapCoordinateSystem(
                     R,
@@ -84,10 +85,8 @@ class OrientationSensor(context: Context) : SensorEventListener {
                     adjustedR
                 )
                 SensorManager.getOrientation(adjustedR, orientation)
-                azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
-                azimuth = (azimuth + 360) % 360
-                roll = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                roll = (roll + 360) % 360
+                azimuth = orientation[0]
+                roll = orientation[2]
 
                 if (listener != null) {
                     listener!!.onNewOrientation(azimuth, pitch, roll)

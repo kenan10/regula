@@ -51,9 +51,9 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             if (viewModel.showDetails) {
                 Column(modifier = Modifier.widthIn(max = 500.dp)) {
                     DetailsItem(
-                        text = "Pitch: ${viewModel.currentSpacePoint.pitch.format(4)} " +
-                                "Azim: ${viewModel.currentSpacePoint.azimuth.format(4)} " +
-                                "Roll: ${viewModel.rollForDisplay.format(4)}"
+                        text = "Pitch: ${viewModel.indicatorsToDisplay["pitch"]?.format(4)} " +
+                                "Azim: ${viewModel.indicatorsToDisplay["azimuth"]?.format(4)} " +
+                                "Roll: ${viewModel.indicatorsToDisplay["roll"]?.format(4)}"
                     )
                     DetailsItem(text = "Distance: ${viewModel.distance.format(2)}")
                 }
@@ -117,10 +117,18 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                 }) {
                     Text(text = "Add point")
                 }
-                Button(onClick = {
-                    if (viewModel.isReady) viewModel.recomputeAngles()
-                }) {
-                    Text(text = "Recompute angles")
+                if (viewModel.correctionDistance == 0f) {
+                    Button(onClick = {
+                        if (viewModel.isReady) viewModel.recomputeAngles()
+                    }) {
+                        Text(text = "Adjust")
+                    }
+                } else {
+                    Button(onClick = {
+                        viewModel.resetAdjustment()
+                    }) {
+                        Text(text = "Reset adjustment")
+                    }
                 }
             }
         }

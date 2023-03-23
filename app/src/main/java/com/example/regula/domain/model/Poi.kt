@@ -5,7 +5,7 @@ import com.example.regula.tools.SpacePoint
 data class Poi(
     val name: String,
     val viewingPointId: Int,
-    val point: SpacePoint,
+    var point: SpacePoint,
     val deviation: Float,
     val visualSize: Float,
     val distance: Float
