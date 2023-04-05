@@ -2,13 +2,13 @@ package com.example.regula.domain.model
 
 import com.example.regula.tools.SpacePoint
 
-data class Poi(
-    val name: String,
-    val viewingPointId: Int,
+class Poi (
+    var name: String,
+    var viewingPointId: Int,
     var point: SpacePoint,
-    val deviation: Float,
-    val visualSize: Float,
-    val distance: Float
+    var deviation: Float,
+    var visualSize: Float,
+    var distance: Float = 0f
 ) {
 
     fun toCompactString(): String {
@@ -39,7 +39,23 @@ data class Poi(
         return "${name};${accelerometerComponent};${magnetometerComponent};${deviationComponent};${visualSize};${distance};"
     }
 
+    fun clearPoint() {
+        point = SpacePoint.emptyPoint()
+    }
+
     companion object Factory {
+        const val DEFAULT_VIEWING_POINT_ID = 1
+
+        fun emptyPoi(): Poi {
+            return Poi(
+                name = "",
+                viewingPointId = DEFAULT_VIEWING_POINT_ID,
+                point = SpacePoint.emptyPoint(),
+                deviation = 0f,
+                visualSize = 0f
+            )
+        }
+
         fun fromCompactString(str: String): List<Poi> {
             var subss = str.split(";")
             subss = subss.slice(0 until subss.size - 1)

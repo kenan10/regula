@@ -4,8 +4,15 @@ import android.hardware.SensorManager
 import kotlin.math.pow
 
 class SpacePoint(var pitch: Float, var azimuth: Float) {
+    fun isEmpty(): Boolean {
+        return azimuth != 0f && pitch != 0f
+    }
 
     companion object Factory {
+        fun emptyPoint(): SpacePoint {
+            return SpacePoint(0f, 0f)
+        }
+
         /**
          * Factory method to create [SpacePoint] from accelerometer and magnetometer sensors
          * values

@@ -64,20 +64,19 @@ class PoiViewerViewModel @Inject constructor(
     var currentSpacePoint = SpacePoint(0f, 0f)
     var correctionDistance by mutableStateOf(0f)
 
-    /*
-     Create separate function for updating point from db, where applying correction
-     dont do update every tick, but only after adding a point, etc.
-     */
-
-    init {
-        setupOrientationSensor()
-        orientationSensor.start()
-        updatePOIsInfo()
-    }
-
     private fun setupOrientationSensor() {
         val cl: OrientationSensor.OrientationListener = getOrientationSensorListener()
         orientationSensor.setListener(cl)
+    }
+
+    fun onStop() {
+        orientationSensor.stop()
+    }
+
+    fun onStart() {
+        setupOrientationSensor()
+        orientationSensor.start()
+        updatePOIsInfo()
     }
 
     private fun getOrientationSensorListener(): OrientationSensor.OrientationListener {
@@ -126,7 +125,7 @@ class PoiViewerViewModel @Inject constructor(
         }
     }
 
-    fun updatePOIsInfo() {
+    private fun updatePOIsInfo() {
         viewModelScope.launch {
             userPoints = userPointRepository.getAllPois()
         }.invokeOnCompletion {

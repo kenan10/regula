@@ -10,5 +10,6 @@ interface PointsRepository {
     suspend fun setCoordinates(newSpacePoint: SpacePoint, name: String)
     suspend fun insertViewingPoint(viewingPoint: ViewingPoint)
     suspend fun insertPoiManual(userPoint: Poi)
+    suspend fun deletePoi(name: String)
     suspend fun deleteAllPois()
 }

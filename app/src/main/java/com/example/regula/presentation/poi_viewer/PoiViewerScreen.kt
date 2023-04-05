@@ -7,10 +7,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -26,15 +27,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.regula.R
 import com.example.regula.presentation.common.PermissionsRequest
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 const val MIN_VISUAL_SIZE = 7f
 const val MAX_VISUAL_SIZE = 20f
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Destination
 fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
     val activity = LocalContext.current as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+
+    DisposableEffect(viewModel) {
+        viewModel.onStart()
+        onDispose {
+            viewModel.onStop()
+        }
+    }
 
     CameraPreview()
     Column(
@@ -69,18 +79,18 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                 }
                 DropdownMenu(expanded = viewModel.isMenuOpened,
                     onDismissRequest = { viewModel.isMenuOpened = false }) {
-                    DropdownMenuItem(onClick = { viewModel.showDetails = !viewModel.showDetails }) {
-                        Text(text = "Toggle details")
-                    }
-                    DropdownMenuItem(onClick = { viewModel.deleteAllPoints() }) {
-                        Text(text = "Wipe data")
-                    }
+                    DropdownMenuItem(
+                        onClick = { viewModel.showDetails = !viewModel.showDetails },
+                        text = { Text(text = "Toggle details") })
+                    DropdownMenuItem(
+                        onClick = { viewModel.deleteAllPoints() },
+                        text = { Text(text = "Wipe data") })
                     DropdownMenuItem(onClick = {
                         viewModel.saveQrWithPoisInfo()
-                    }) {
+                    }, text = {
                         PermissionsRequest(permissions = listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE))
                         Text(text = "Get QR-code")
-                    }
+                    })
                 }
             }
         }

@@ -35,6 +35,10 @@ class PointsRepositoryImpl @Inject constructor(db: RegulaDatabase) :
         dao.insertPoi(userPoint.toPoiEntity())
     }
 
+    override suspend fun deletePoi(name: String) {
+        dao.deletePoi(name = name)
+    }
+
     override suspend fun deleteAllPois() {
         dao.deleteAllPois()
     }

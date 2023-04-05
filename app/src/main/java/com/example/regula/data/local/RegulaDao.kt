@@ -28,6 +28,9 @@ interface RegulaDao {
     @Query("SELECT * FROM ViewingPointEntity WHERE id=:id")
     suspend fun getViewingPoint(id: Int): List<ViewingPointEntity>
 
+    @Query("DELETE FROM PoiEntity WHERE name LIKE :name")
+    suspend fun deletePoi(name: String)
+
     @Query("DELETE FROM ViewingPointEntity")
     suspend fun deleteAllViewingPoints()
 
