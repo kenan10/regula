@@ -24,13 +24,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.regula.Constants
 import com.example.regula.R
 import com.example.regula.presentation.common.PermissionsRequest
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-
-const val MIN_VISUAL_SIZE = 7f
-const val MAX_VISUAL_SIZE = 20f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,9 +58,8 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             if (viewModel.showDetails) {
                 Column(modifier = Modifier.widthIn(max = 500.dp)) {
                     DetailsItem(
-                        text = "Pitch: ${viewModel.indicatorsToDisplay["pitch"]?.format(4)} " +
-                                "Azim: ${viewModel.indicatorsToDisplay["azimuth"]?.format(4)} " +
-                                "Roll: ${viewModel.indicatorsToDisplay["roll"]?.format(4)}"
+                        text = "Pitch: ${viewModel.indicatorsToDisplay["pitch"]?.format(0)} " +
+                                "Azim: ${viewModel.indicatorsToDisplay["azimuth"]?.format(0)}"
                     )
                     DetailsItem(text = "Distance: ${viewModel.distance.format(2)}")
                 }
@@ -101,7 +97,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                modifier = Modifier.background(Color.White),
+                modifier = Modifier.background(MaterialTheme.colorScheme.background),
                 text = viewModel.currentPointName,
                 fontSize = 22.sp
             )
@@ -190,7 +186,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                     Slider(
                         value = viewModel.newRadius,
                         onValueChange = { viewModel.newRadius = it },
-                        valueRange = MIN_VISUAL_SIZE..MAX_VISUAL_SIZE
+                        valueRange = Constants.MIN_ON_SCREEN_SIZE..Constants.MAX_ON_SCREEN_SIZE
                     )
                 }
             })
@@ -213,7 +209,7 @@ fun ReadinessIndicator(modifier: Modifier = Modifier, isReady: Boolean) {
 @Composable
 fun DetailsItem(text: String) {
     Text(
-        text = text, modifier = Modifier.background(Color.White)
+        text = text, modifier = Modifier.background(MaterialTheme.colorScheme.background)
     )
 }
 

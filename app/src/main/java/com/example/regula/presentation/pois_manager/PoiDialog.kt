@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.regula.Constants
 import com.example.regula.R
 import com.example.regula.domain.model.Poi
 import com.example.regula.tools.SpacePoint
@@ -96,7 +97,9 @@ fun PoiDialog(
                                 value = poiDialogState.deviation,
                                 onValueChange = { newDeviation ->
                                     poiDialogState.deviation = newDeviation
-                                })
+                                },
+                                valueRange = Constants.MIN_DEVIATION..Constants.MAX_DEVIATION
+                            )
                         }
                         Column {
                             Text(text = "Visual size: ${poiDialogState.visualSize}")
@@ -104,7 +107,8 @@ fun PoiDialog(
                                 value = poiDialogState.visualSize,
                                 onValueChange = { newVisualSize ->
                                     poiDialogState.visualSize = newVisualSize
-                                }
+                                },
+                                valueRange = Constants.MIN_ON_SCREEN_SIZE..Constants.MAX_ON_SCREEN_SIZE
                             )
                         }
                     }

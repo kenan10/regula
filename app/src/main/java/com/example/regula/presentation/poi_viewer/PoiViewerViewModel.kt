@@ -7,13 +7,13 @@ import android.content.ContentValues
 import android.icu.text.SimpleDateFormat
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.regula.Constants
 import com.example.regula.domain.model.Poi
 import com.example.regula.domain.repository.PointsRepository
 import com.example.regula.tools.OrientationSensor
@@ -27,15 +27,11 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.*
 
-const val DEVIATION = 0.0349f
-const val USER_HEIGHT = 1.48f
-
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
     @Named("orientationSensor") private val orientationSensor: OrientationSensor,
     private val appContext: Application,
-    private val userPointRepository: PointsRepository,
-
+    private val userPointRepository: PointsRepository
     ) : ViewModel() {
     // State for new point creation
     var newRadius by mutableStateOf(0f)
@@ -63,6 +59,7 @@ class PoiViewerViewModel @Inject constructor(
     private var userPoints = emptyList<Poi>()
     var currentSpacePoint = SpacePoint(0f, 0f)
     var correctionDistance by mutableStateOf(0f)
+    var correctionAzimuth by mutableStateOf(0f)
 
     private fun setupOrientationSensor() {
         val cl: OrientationSensor.OrientationListener = getOrientationSensorListener()
@@ -81,23 +78,23 @@ class PoiViewerViewModel @Inject constructor(
 
     private fun getOrientationSensorListener(): OrientationSensor.OrientationListener {
         return object : OrientationSensor.OrientationListener {
-            override fun onNewOrientation(azimuth: Float, pitch: Float, roll: Float) {
-                currentSpacePoint = SpacePoint(pitch, azimuth)
+            override fun onNewOrientation(azimuth: Float, pitch: Float, roll: Float, geomagnetic: FloatArray, gravity: FloatArray) {
                 identifyPoint()
-
+                isReady = abs(gravity[1]) < 0.4f
                 var pitchInDegrees = Math.toDegrees(pitch.toDouble()).toFloat()
                 pitchInDegrees = (pitchInDegrees + 180) % 180
-                var azimuthInDegrees = Math.toDegrees(pitch.toDouble()).toFloat()
+                var azimuthInDegrees = Math.toDegrees(azimuth.toDouble()).toFloat()
                 azimuthInDegrees = (azimuthInDegrees + 360) % 360
-                var rollInDegrees = Math.toDegrees(pitch.toDouble()).toFloat()
+                var rollInDegrees = Math.toDegrees(roll.toDouble()).toFloat()
                 rollInDegrees = (rollInDegrees + 360) % 360
+                currentSpacePoint = SpacePoint(pitch, azimuth)
                 indicatorsToDisplay = mapOf(
-                    "pitch" to pitch,
+                    "pitch" to pitchInDegrees,
                     "azimuth" to azimuthInDegrees,
                     "roll" to rollInDegrees
                 )
 
-                distance = abs((tan(currentSpacePoint.pitch) * USER_HEIGHT))
+                distance = abs((tan(currentSpacePoint.pitch) * Constants.USER_HEIGHT))
             }
         }
     }
@@ -105,10 +102,8 @@ class PoiViewerViewModel @Inject constructor(
     private fun identifyPoint() {
         if (isReady) {
             val currentPoint = userPoints.find {
-                Log.println(Log.DEBUG, "TAG", "Pitch: ${it.point.pitch}")
-                Log.println(Log.DEBUG, "TAG", "Azimuth: ${it.point.azimuth}")
                 currentSpacePoint.isInCircle(
-                    center = it.point, deviation = DEVIATION
+                    center = it.point, deviation = it.deviation
                 )
             }
             if (currentPoint != null) {
@@ -133,25 +128,36 @@ class PoiViewerViewModel @Inject constructor(
             if (correctionDistance > 0) {
                 // Toast.makeText(appContext, "CORRECTED", Toast.LENGTH_SHORT).show()
                 userPoints.forEach {
-                    // Toast.makeText(appContext, "Previous ${it.point.pitch}", Toast.LENGTH_SHORT).show()
-                    /*
-                    val a = it.point.azimuth
+                    Toast.makeText(appContext, "Previous ${it.point.azimuth}", Toast.LENGTH_SHORT)
+                        .show()
+                    val theta = it.point.azimuth
                     val d = correctionDistance
                     val s = it.distance
-                    val b = angle between direction to North and new viewing point
-                    val newAzimuth = acos(s*cos(a)+d*cos(b))
-                     */
+                    val beta = correctionAzimuth
+                    Toast.makeText(appContext, "theta $theta", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(appContext, "d $d", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(appContext, "s $s", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(appContext, "beta $beta", Toast.LENGTH_SHORT).show()
+
+                    // -ArcCos[-((d Cos[\[Beta]] + s Cos[\[Theta]])/Sqrt[d^2 + s^2 + 2 d s Cos[\[Beta] - \[Theta]]])]
+                    val newAzimuth = if (beta > 0.2f) {
+                        acos((d * cos(beta) + s * cos(theta)) / sqrt(d * d + s * s + 2 * d * s * cos(beta - theta)))
+                    } else {
+                        // -ArcCos[(d Cos[\[Beta]] + s Cos[\[Theta]])/Sqrt[d^2 + s^2 + 2 d s Cos[\[Beta] - \[Theta]]]]
+                        -acos((d * cos(beta) + s * cos(theta)) / sqrt(d * d + s * s + 2 * d * s * cos(beta - theta)))
+                    }
+                    Toast.makeText(appContext, "newAzimuth $newAzimuth", Toast.LENGTH_SHORT).show()
                     val newPitch =
                         atan((it.distance + correctionDistance) / (it.distance / tan(it.point.pitch)))
                     val newSpacePoint = SpacePoint(
                         newPitch,
-                        it.point.azimuth
+                        newAzimuth
                     )
                     it.point = newSpacePoint
-                    // viewModelScope.launch {
-                    //    userPointRepository.setCoordinates(newSpacePoint, it.name)
-                    // }
-                    // Toast.makeText(appContext, "New $newPitch", Toast.LENGTH_SHORT).show()
+//                    viewModelScope.launch {
+//                        userPointRepository.setCoordinates(newSpacePoint, it.name)
+//                    }
+                    Toast.makeText(appContext, "New $newAzimuth", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -159,11 +165,13 @@ class PoiViewerViewModel @Inject constructor(
 
     fun resetAdjustment() {
         correctionDistance = 0f
+        correctionAzimuth = 0f
         updatePOIsInfo()
     }
 
     fun recomputeAngles() {
         correctionDistance = distance
+        correctionAzimuth = currentSpacePoint.azimuth
         updatePOIsInfo()
     }
 
@@ -214,7 +222,7 @@ class PoiViewerViewModel @Inject constructor(
         val newPoi = Poi(
             name = newPointName,
             point = newPointSpacePoint,
-            deviation = DEVIATION,
+            deviation = Constants.DEVIATION,
             viewingPointId = 1,
             visualSize = newRadius,
             distance = distanceToBase
