@@ -82,7 +82,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                         onClick = { viewModel.deleteAllPoints() },
                         text = { Text(text = "Wipe data") })
                     DropdownMenuItem(onClick = {
-                        viewModel.saveQrWithPoisInfo()
+                        viewModel.exportQRCode()
                     }, text = {
                         PermissionsRequest(permissions = listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE))
                         Text(text = "Get QR-code")

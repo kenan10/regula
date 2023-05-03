@@ -1,9 +1,10 @@
 package com.example.regula.presentation.poi_viewer
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.icu.text.SimpleDateFormat
 import android.os.Environment
 import android.provider.MediaStore
@@ -21,18 +22,20 @@ import com.example.regula.tools.SpacePoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.g0dkar.qrcode.QRCode
 import kotlinx.coroutines.*
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.*
 
+
 @HiltViewModel
 class PoiViewerViewModel @Inject constructor(
     @Named("orientationSensor") private val orientationSensor: OrientationSensor,
     private val appContext: Application,
     private val userPointRepository: PointsRepository
-    ) : ViewModel() {
+) : ViewModel() {
     // State for new point creation
     var newRadius by mutableStateOf(0f)
     var distanceToBase by mutableStateOf(0f)
@@ -78,7 +81,13 @@ class PoiViewerViewModel @Inject constructor(
 
     private fun getOrientationSensorListener(): OrientationSensor.OrientationListener {
         return object : OrientationSensor.OrientationListener {
-            override fun onNewOrientation(azimuth: Float, pitch: Float, roll: Float, geomagnetic: FloatArray, gravity: FloatArray) {
+            override fun onNewOrientation(
+                azimuth: Float,
+                pitch: Float,
+                roll: Float,
+                geomagnetic: FloatArray,
+                gravity: FloatArray
+            ) {
                 identifyPoint()
                 isReady = abs(gravity[1]) < 0.4f
                 var pitchInDegrees = Math.toDegrees(pitch.toDouble()).toFloat()
@@ -141,10 +150,22 @@ class PoiViewerViewModel @Inject constructor(
 
                     // -ArcCos[-((d Cos[\[Beta]] + s Cos[\[Theta]])/Sqrt[d^2 + s^2 + 2 d s Cos[\[Beta] - \[Theta]]])]
                     val newAzimuth = if (beta > 0.2f) {
-                        acos((d * cos(beta) + s * cos(theta)) / sqrt(d * d + s * s + 2 * d * s * cos(beta - theta)))
+                        acos(
+                            (d * cos(beta) + s * cos(theta)) / sqrt(
+                                d * d + s * s + 2 * d * s * cos(
+                                    beta - theta
+                                )
+                            )
+                        )
                     } else {
                         // -ArcCos[(d Cos[\[Beta]] + s Cos[\[Theta]])/Sqrt[d^2 + s^2 + 2 d s Cos[\[Beta] - \[Theta]]]]
-                        -acos((d * cos(beta) + s * cos(theta)) / sqrt(d * d + s * s + 2 * d * s * cos(beta - theta)))
+                        -acos(
+                            (d * cos(beta) + s * cos(theta)) / sqrt(
+                                d * d + s * s + 2 * d * s * cos(
+                                    beta - theta
+                                )
+                            )
+                        )
                     }
                     Toast.makeText(appContext, "newAzimuth $newAzimuth", Toast.LENGTH_SHORT).show()
                     val newPitch =
@@ -184,9 +205,8 @@ class PoiViewerViewModel @Inject constructor(
         newPointSpacePoint = currentSpacePoint
     }
 
-    @SuppressLint("SimpleDateFormat")
-    fun saveQrWithPoisInfo() {
-        val simpleDateFormat = SimpleDateFormat("yyyymmsshhmmss")
+    fun exportQRCode() {
+        val simpleDateFormat = SimpleDateFormat("yyyymmsshhmmss", Locale.getDefault())
         val date = simpleDateFormat.format(Date())
         var finalCompactString = ""
         userPoints.forEach {
@@ -199,15 +219,21 @@ class PoiViewerViewModel @Inject constructor(
         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
         contentValues.put(
             MediaStore.MediaColumns.RELATIVE_PATH,
-            Environment.DIRECTORY_PICTURES + File.separator + "TestFolder"
+            Environment.DIRECTORY_PICTURES + File.separator + "RegulaQRs"
         )
         val imageUri =
             resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-        resolver.openOutputStream(imageUri!!).use {
-            QRCode(finalCompactString)
-                .render(margin = 25)
-                .writeImage(it!!)
-        }
+        val imageBytes = ByteArrayOutputStream()
+            .also { QRCode(finalCompactString).render(margin = 50).writeImage(it) }
+            .toByteArray()
+
+        var bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        val ration = 1.52f
+        val newHeight = bitmap.width * ration
+        bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, newHeight.toInt(), false)
+
+        resolver.openOutputStream(imageUri!!)
+            .use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         Toast.makeText(appContext, "QR code saved", Toast.LENGTH_SHORT).show()
     }
 
