@@ -38,6 +38,7 @@ class PoiViewerViewModel @Inject constructor(
 ) : ViewModel() {
     // State for new point creation
     var newRadius by mutableStateOf(0f)
+    var newPointDeviation by mutableStateOf(Constants.DEVIATION)
     var distanceToBase by mutableStateOf(0f)
     var newPointName by mutableStateOf("")
     private var newPointSpacePoint = SpacePoint(0f, 0f)
@@ -96,14 +97,17 @@ class PoiViewerViewModel @Inject constructor(
                 azimuthInDegrees = (azimuthInDegrees + 360) % 360
                 var rollInDegrees = Math.toDegrees(roll.toDouble()).toFloat()
                 rollInDegrees = (rollInDegrees + 360) % 360
-                currentSpacePoint = SpacePoint(pitch, azimuth)
+                currentSpacePoint = SpacePoint(pitchInDegrees, azimuthInDegrees)
                 indicatorsToDisplay = mapOf(
                     "pitch" to pitchInDegrees,
                     "azimuth" to azimuthInDegrees,
                     "roll" to rollInDegrees
                 )
 
-                distance = abs((tan(currentSpacePoint.pitch) * Constants.USER_HEIGHT))
+                distance = abs(
+                    (tan(Math.toRadians(currentSpacePoint.pitch.toDouble()))
+                            * Constants.USER_HEIGHT)
+                ).toFloat()
             }
         }
     }
@@ -137,48 +141,52 @@ class PoiViewerViewModel @Inject constructor(
             if (correctionDistance > 0) {
                 // Toast.makeText(appContext, "CORRECTED", Toast.LENGTH_SHORT).show()
                 userPoints.forEach {
-                    Toast.makeText(appContext, "Previous ${it.point.azimuth}", Toast.LENGTH_SHORT)
-                        .show()
-                    val theta = it.point.azimuth
+                    val theta = Math.toRadians(it.point.azimuth.toDouble())
                     val d = correctionDistance
                     val s = it.distance
-                    val beta = correctionAzimuth
-                    Toast.makeText(appContext, "theta $theta", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(appContext, "d $d", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(appContext, "s $s", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(appContext, "beta $beta", Toast.LENGTH_SHORT).show()
-
-                    // -ArcCos[-((d Cos[\[Beta]] + s Cos[\[Theta]])/Sqrt[d^2 + s^2 + 2 d s Cos[\[Beta] - \[Theta]]])]
-                    val newAzimuth = if (beta > 0.2f) {
-                        acos(
-                            (d * cos(beta) + s * cos(theta)) / sqrt(
-                                d * d + s * s + 2 * d * s * cos(
-                                    beta - theta
-                                )
-                            )
+                    val beta = Math.toRadians(correctionAzimuth.toDouble())
+                    val phi = Math.toRadians(it.point.pitch.toDouble())
+                    val theta1 = acos(
+                        (d * cos(beta) + s * cos(theta)) / sqrt(
+                            d * d + s * s + 2 * d * s * cos(beta - theta)
                         )
-                    } else {
-                        // -ArcCos[(d Cos[\[Beta]] + s Cos[\[Theta]])/Sqrt[d^2 + s^2 + 2 d s Cos[\[Beta] - \[Theta]]]]
-                        -acos(
-                            (d * cos(beta) + s * cos(theta)) / sqrt(
-                                d * d + s * s + 2 * d * s * cos(
-                                    beta - theta
-                                )
-                            )
-                        )
-                    }
-                    Toast.makeText(appContext, "newAzimuth $newAzimuth", Toast.LENGTH_SHORT).show()
+                    )
+                    val theta2 = (2 * PI - theta1).toFloat()
+                    Toast.makeText(
+                        appContext,
+                        "theta ${azimuthToDegrees(theta.toFloat())}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Toast.makeText(
+                        appContext,
+                        "theta1 ${azimuthToDegrees(theta1.toFloat())}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Toast.makeText(
+                        appContext,
+                        "theta2 ${azimuthToDegrees(theta2)}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    val newAzimuth =
+                        if (abs(azimuthToDegrees(theta.toFloat()) - azimuthToDegrees(theta1.toFloat())) >
+                            abs(azimuthToDegrees(theta.toFloat()) - azimuthToDegrees(theta2))
+                        ) {
+                            azimuthToDegrees(theta2)
+                        } else {
+                            azimuthToDegrees(theta1.toFloat())
+                        }
                     val newPitch =
-                        atan((it.distance + correctionDistance) / (it.distance / tan(it.point.pitch)))
+                        atan((s + d) / (s / tan(phi)))
                     val newSpacePoint = SpacePoint(
-                        newPitch,
+                        Math.toDegrees(newPitch).toFloat(),
                         newAzimuth
                     )
                     it.point = newSpacePoint
-//                    viewModelScope.launch {
-//                        userPointRepository.setCoordinates(newSpacePoint, it.name)
-//                    }
-                    Toast.makeText(appContext, "New $newAzimuth", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(appContext, "newAzimuth ${it.point.azimuth}", Toast.LENGTH_SHORT)
+                        .show()
+                    // viewModelScope.launch {
+                    //     userPointRepository.setCoordinates(newSpacePoint, it.name)
+                    // }
                 }
             }
         }
@@ -248,7 +256,7 @@ class PoiViewerViewModel @Inject constructor(
         val newPoi = Poi(
             name = newPointName,
             point = newPointSpacePoint,
-            deviation = Constants.DEVIATION,
+            deviation = newPointDeviation,
             viewingPointId = 1,
             visualSize = newRadius,
             distance = distanceToBase
@@ -259,5 +267,11 @@ class PoiViewerViewModel @Inject constructor(
                 newPoi
             )
         }
+    }
+
+    private fun azimuthToDegrees(azimuthRads: Float): Float {
+        var azimuthInDegrees = Math.toDegrees(azimuthRads.toDouble()).toFloat()
+        azimuthInDegrees = (azimuthInDegrees + 360) % 360
+        return azimuthInDegrees
     }
 }

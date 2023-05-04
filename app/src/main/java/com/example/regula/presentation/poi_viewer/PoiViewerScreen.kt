@@ -59,7 +59,7 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                 Column(modifier = Modifier.widthIn(max = 500.dp)) {
                     DetailsItem(
                         text = "Pitch: ${viewModel.indicatorsToDisplay["pitch"]?.format(0)} " +
-                                "Azim: ${viewModel.indicatorsToDisplay["azimuth"]?.format(0)}"
+                                "Azim: ${viewModel.indicatorsToDisplay["azimuth"]?.format(4)}"
                     )
                     DetailsItem(text = "Distance: ${viewModel.distance.format(2)}")
                 }
@@ -183,10 +183,17 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
                     TextField(value = viewModel.newPointName, onValueChange = { newText ->
                         viewModel.newPointName = newText
                     }, placeholder = { Text(text = "Point name") })
+                    Text(text = "Visual size:")
                     Slider(
                         value = viewModel.newRadius,
                         onValueChange = { viewModel.newRadius = it },
                         valueRange = Constants.MIN_ON_SCREEN_SIZE..Constants.MAX_ON_SCREEN_SIZE
+                    )
+                    Text(text = "Deviation:")
+                    Slider(
+                        value = viewModel.newPointDeviation,
+                        onValueChange = { viewModel.newPointDeviation = it },
+                        valueRange = Constants.MIN_DEVIATION..Constants.MAX_DEVIATION
                     )
                 }
             })
