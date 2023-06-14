@@ -105,8 +105,7 @@ class PoiViewerViewModel @Inject constructor(
                 )
 
                 distance = abs(
-                    (tan(Math.toRadians(currentSpacePoint.pitch.toDouble()))
-                            * Constants.USER_HEIGHT)
+                    (tan(Math.toRadians(currentSpacePoint.pitch.toDouble())) * Constants.USER_HEIGHT)
                 ).toFloat()
             }
         }
@@ -147,11 +146,10 @@ class PoiViewerViewModel @Inject constructor(
                     val beta = Math.toRadians(correctionAzimuth.toDouble())
                     val phi = Math.toRadians(it.point.pitch.toDouble())
                     val theta1 = acos(
-                        (d * cos(beta) + s * cos(theta)) / sqrt(
-                            d * d + s * s + 2 * d * s * cos(beta - theta)
-                        )
+                        ((-s * cos(theta) + d * cos(beta)) * abs(s * sin(theta) - d * sin(beta))) /
+                        (sqrt(d * d + s * s - 2 * d * s * cos(theta - beta)) * (-s * sin(theta) + d * sin(beta)))
                     )
-                    val theta2 = (2 * PI - theta1).toFloat()
+                    val theta2 = PI + theta1
                     Toast.makeText(
                         appContext,
                         "theta ${azimuthToDegrees(theta.toFloat())}",
@@ -159,19 +157,22 @@ class PoiViewerViewModel @Inject constructor(
                     ).show()
                     Toast.makeText(
                         appContext,
-                        "theta1 ${azimuthToDegrees(theta1.toFloat())}",
+                        "beta ${azimuthToDegrees(beta.toFloat())}",
                         Toast.LENGTH_SHORT
                     ).show()
                     Toast.makeText(
                         appContext,
-                        "theta2 ${azimuthToDegrees(theta2)}",
+                        "s $s",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Toast.makeText(
+                        appContext,
+                        "d $d",
                         Toast.LENGTH_SHORT
                     ).show()
                     val newAzimuth =
-                        if (abs(azimuthToDegrees(theta.toFloat()) - azimuthToDegrees(theta1.toFloat())) >
-                            abs(azimuthToDegrees(theta.toFloat()) - azimuthToDegrees(theta2))
-                        ) {
-                            azimuthToDegrees(theta2)
+                        if (theta > PI) {
+                             azimuthToDegrees(theta2.toFloat())
                         } else {
                             azimuthToDegrees(theta1.toFloat())
                         }
