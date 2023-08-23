@@ -36,6 +36,7 @@ class PoiViewerViewModel @Inject constructor(
     private val appContext: Application,
     private val userPointRepository: PointsRepository
 ) : ViewModel() {
+
     // State for new point creation
     var newRadius by mutableStateOf(0f)
     var newPointDeviation by mutableStateOf(Constants.DEVIATION)
@@ -48,8 +49,9 @@ class PoiViewerViewModel @Inject constructor(
     var currentPointName by mutableStateOf("")
 
     // Details
-    var indicatorsToDisplay by mutableStateOf(emptyMap<String, Float>())
+    var readingsForShow by mutableStateOf(emptyMap<String, Float>())
     var distance by mutableStateOf(0f)
+    var sensorsAccuracyStatus by mutableStateOf("")
 
     // UI state
     var isReady by mutableStateOf(true)
@@ -87,22 +89,22 @@ class PoiViewerViewModel @Inject constructor(
                 pitch: Float,
                 roll: Float,
                 geomagnetic: FloatArray,
-                gravity: FloatArray
+                gravity: FloatArray,
+                sensorsAccuracy: String
             ) {
                 identifyPoint()
                 isReady = abs(gravity[1]) < 0.4f
-                var pitchInDegrees = Math.toDegrees(pitch.toDouble()).toFloat()
-                pitchInDegrees = (pitchInDegrees + 180) % 180
-                var azimuthInDegrees = Math.toDegrees(azimuth.toDouble()).toFloat()
-                azimuthInDegrees = (azimuthInDegrees + 360) % 360
+                val pitchInDegrees = pitchToDegrees(pitch)
+                val azimuthInDegrees = azimuthToDegrees(azimuth)
                 var rollInDegrees = Math.toDegrees(roll.toDouble()).toFloat()
                 rollInDegrees = (rollInDegrees + 360) % 360
                 currentSpacePoint = SpacePoint(pitchInDegrees, azimuthInDegrees)
-                indicatorsToDisplay = mapOf(
+                readingsForShow = mapOf(
                     "pitch" to pitchInDegrees,
                     "azimuth" to azimuthInDegrees,
                     "roll" to rollInDegrees
                 )
+                sensorsAccuracyStatus = sensorsAccuracy
 
                 distance = abs(
                     (tan(Math.toRadians(currentSpacePoint.pitch.toDouble())) * Constants.USER_HEIGHT)
@@ -145,11 +147,12 @@ class PoiViewerViewModel @Inject constructor(
                     val s = it.distance
                     val beta = Math.toRadians(correctionAzimuth.toDouble())
                     val phi = Math.toRadians(it.point.pitch.toDouble())
-                    val theta1 = acos(
-                        ((-s * cos(theta) + d * cos(beta)) * abs(s * sin(theta) - d * sin(beta))) /
-                        (sqrt(d * d + s * s - 2 * d * s * cos(theta - beta)) * (-s * sin(theta) + d * sin(beta)))
+                    val theta1 =  acos(
+                        (d * cos(beta) + s * cos(theta)) / sqrt(
+                            d * d + s * s + 2 * d * s * cos(beta - theta)
+                        )
                     )
-                    val theta2 = PI + theta1
+                    val theta2 = 2 * PI - theta1
                     Toast.makeText(
                         appContext,
                         "theta ${azimuthToDegrees(theta.toFloat())}",
@@ -171,15 +174,17 @@ class PoiViewerViewModel @Inject constructor(
                         Toast.LENGTH_SHORT
                     ).show()
                     val newAzimuth =
-                        if (theta > PI) {
-                             azimuthToDegrees(theta2.toFloat())
+                        if (abs(azimuthToDegrees(theta.toFloat()) - azimuthToDegrees(theta1.toFloat())) >
+                            abs(azimuthToDegrees(theta.toFloat()) - azimuthToDegrees(theta2.toFloat()))
+                        ) {
+                            azimuthToDegrees(theta2.toFloat())
                         } else {
                             azimuthToDegrees(theta1.toFloat())
                         }
                     val newPitch =
                         atan((s + d) / (s / tan(phi)))
                     val newSpacePoint = SpacePoint(
-                        Math.toDegrees(newPitch).toFloat(),
+                        pitchToDegrees(newPitch.toFloat()),
                         newAzimuth
                     )
                     it.point = newSpacePoint
@@ -274,5 +279,11 @@ class PoiViewerViewModel @Inject constructor(
         var azimuthInDegrees = Math.toDegrees(azimuthRads.toDouble()).toFloat()
         azimuthInDegrees = (azimuthInDegrees + 360) % 360
         return azimuthInDegrees
+    }
+
+    private fun pitchToDegrees(pitchRads: Float): Float {
+        var pitchInDegrees = Math.toDegrees(pitchRads.toDouble()).toFloat()
+        pitchInDegrees = (pitchInDegrees + 180) % 180
+        return pitchInDegrees
     }
 }

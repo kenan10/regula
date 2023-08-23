@@ -58,9 +58,10 @@ fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {
             if (viewModel.showDetails) {
                 Column(modifier = Modifier.widthIn(max = 500.dp)) {
                     DetailsItem(
-                        text = "Pitch: ${viewModel.indicatorsToDisplay["pitch"]?.format(0)} " +
-                                "Azim: ${viewModel.indicatorsToDisplay["azimuth"]?.format(4)}"
+                        text = "Pitch: ${viewModel.readingsForShow["pitch"]?.format(0)} " +
+                                "Azim: ${viewModel.readingsForShow["azimuth"]?.format(0)}"
                     )
+                    DetailsItem(text = "Accuracy: ${viewModel.sensorsAccuracyStatus}")
                     DetailsItem(text = "Distance: ${viewModel.distance.format(2)}")
                 }
             }
