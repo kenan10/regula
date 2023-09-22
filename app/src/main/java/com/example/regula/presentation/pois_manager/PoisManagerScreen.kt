@@ -137,3 +137,5 @@ fun PoisManagerScreen(
         }
     }
 }
+
+class Settings

@@ -10,9 +10,21 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
-class OrientationSensor(context: Context) : SensorEventListener {
+class OrientationSensor(
+    context: Context,
+    var alpha: Float = 0.99f,
+    var readingsBufferSize: Int = 100,
+    var useFilter: Boolean = true
+) : SensorEventListener {
     interface OrientationListener {
-        fun onNewOrientation(azimuth: Float, pitch: Float, roll: Float, geomagnetic: FloatArray, gravity: FloatArray, sensorsAccuracy: String)
+        fun onNewOrientation(
+            azimuth: Float,
+            pitch: Float,
+            roll: Float,
+            geomagnetic: FloatArray,
+            gravity: FloatArray,
+            sensorsAccuracy: String
+        )
     }
 
     private var listener: OrientationListener? = null
@@ -57,7 +69,6 @@ class OrientationSensor(context: Context) : SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        val alpha = 0.9f
         synchronized(this) {
             if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
                 gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0]
@@ -65,9 +76,15 @@ class OrientationSensor(context: Context) : SensorEventListener {
                 gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2]
             }
             if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-                geomagnetic[0] = event.values[0]
-                geomagnetic[1] = event.values[1]
-                geomagnetic[2] = event.values[2]
+                if (useFilter) {
+                    geomagnetic[0] = alpha * geomagnetic[0] + (1 - alpha) * event.values[0]
+                    geomagnetic[1] = alpha * geomagnetic[1] + (1 - alpha) * event.values[1]
+                    geomagnetic[2] = alpha * geomagnetic[2] + (1 - alpha) * event.values[2]
+                } else {
+                    geomagnetic[0] = event.values[0]
+                    geomagnetic[1] = event.values[1]
+                    geomagnetic[2] = event.values[2]
+                }
             }
 
             val R = FloatArray(9)
@@ -86,14 +103,26 @@ class OrientationSensor(context: Context) : SensorEventListener {
                     adjustedR
                 )
                 SensorManager.getOrientation(adjustedR, orientation)
-                if (azimuthReadings.size == READINGS_MEMORY_SIZE) {
+                if (azimuthReadings.size == readingsBufferSize) {
                     azimuthReadings = azimuthReadings.drop(1)
                 }
                 azimuthReadings = azimuthReadings.plus(orientation[0])
-                pitch = (orientation[1] + PI/2).toFloat()
+                val azimuth = if (useFilter) {
+                    azimuthReadings.last()
+                } else {
+                    averageAngle(azimuthReadings)
+                }
+                pitch = (orientation[1] + PI / 2).toFloat()
                 roll = orientation[2]
 
-                listener?.onNewOrientation(averageAngle(azimuthReadings), pitch, roll, geomagnetic, gravity, accuracyStatusStr)
+                listener?.onNewOrientation(
+                    azimuth,
+                    pitch,
+                    roll,
+                    geomagnetic,
+                    gravity,
+                    accuracyStatusStr
+                )
             }
         }
     }
@@ -121,6 +150,5 @@ class OrientationSensor(context: Context) : SensorEventListener {
 
     companion object {
         private const val TAG = "Compass"
-        private const val READINGS_MEMORY_SIZE = 100
     }
 }
