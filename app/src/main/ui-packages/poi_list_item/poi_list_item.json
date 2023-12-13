@@ -5,7 +5,7 @@
     "type": "figma",
     "file": "haIDp3YXaw4tdy6b4JzJqY",
     "node": "13:2463",
-    "version": "3284054862",
+    "version": "4797177244",
     "component-id": "5e0cf6b4dbda50f5f3a41ee80a857dd4e62b7862"
   },
   "default": "PoiListItem",
@@ -26,6 +26,10 @@
       },
       {
         "type": "group",
+        "id": "ShareBtn"
+      },
+      {
+        "type": "group",
         "id": "EditBtn"
       },
       {
@@ -35,6 +39,14 @@
       {
         "type": "text",
         "id": "PoiTitle"
+      },
+      {
+        "type": "group",
+        "id": "share_FILL0_wght400_GRAD0_opsz24 1"
+      },
+      {
+        "type": "vector",
+        "id": "Vector"
       },
       {
         "type": "group",
@@ -92,6 +104,7 @@
             "arrangement": "row",
             "children": [
               "PoiTitleContainer",
+              "ShareBtn",
               "EditBtn",
               "DeleteBtn"
             ],
@@ -103,6 +116,26 @@
             "cross-axis-align": "start",
             "children": [
               "PoiTitle"
+            ],
+            "item-spacing": "10.0",
+            "clip-content": "false"
+          },
+          {
+            "id": "ShareBtn",
+            "tap-handler": "$on ShareBtn tapped",
+            "size-constraints": {
+              "width-constraints": {
+                "sizing-mode": "fixed",
+                "value": "29.0"
+              },
+              "height-constraints": {
+                "sizing-mode": "fixed",
+                "value": "29.0"
+              }
+            },
+            "arrangement": "row",
+            "children": [
+              "share_FILL0_wght400_GRAD0_opsz24 1"
             ],
             "item-spacing": "10.0",
             "clip-content": "false"
@@ -165,6 +198,43 @@
             "line-height": "1.5"
           },
           {
+            "id": "share_FILL0_wght400_GRAD0_opsz24 1",
+            "size-constraints": {
+              "width-constraints": {
+                "sizing-mode": "fixed",
+                "value": "29.0"
+              },
+              "height-constraints": {
+                "sizing-mode": "fixed",
+                "value": "29.0"
+              }
+            },
+            "is-structured": "false",
+            "children": [
+              "Vector"
+            ]
+          },
+          {
+            "id": "Vector",
+            "margin": {
+              "left": "3.625",
+              "top": "2.416656494140625",
+              "right": "3.625",
+              "bottom": "2.416677474975586"
+            },
+            "size-constraints": {
+              "width-constraints": {
+                "sizing-mode": "proportional",
+                "value": "1.0"
+              },
+              "height-constraints": {
+                "sizing-mode": "proportional",
+                "value": "1.0"
+              }
+            },
+            "vector-content": "vector.svg"
+          },
+          {
             "id": "Icons/mode_edit_24px",
             "is-structured": "false",
             "children": [
@@ -177,8 +247,8 @@
             "margin": {
               "left": "3.625",
               "top": "3.63104248046875",
-              "right": "3.6219482421875",
-              "bottom": "3.625"
+              "right": "3.621978759765625",
+              "bottom": "3.624998092651367"
             },
             "size-constraints": {
               "width-constraints": {
@@ -205,7 +275,7 @@
             "margin": {
               "left": "4.83331298828125",
               "top": "3.625",
-              "right": "4.833343505859375",
+              "right": "4.833354949951172",
               "bottom": "3.625"
             },
             "size-constraints": {
@@ -225,6 +295,11 @@
     }
   },
   "parameters": {
+    "on ShareBtn tapped": {
+      "data-type": "void-callback",
+      "required": false,
+      "description": ""
+    },
     "on EditBtn tapped": {
       "data-type": "void-callback",
       "required": false,

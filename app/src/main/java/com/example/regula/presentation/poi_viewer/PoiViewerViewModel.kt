@@ -10,6 +10,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -38,19 +39,19 @@ class PoiViewerViewModel @Inject constructor(
 ) : ViewModel() {
 
     // State for new point creation
-    var newRadius by mutableStateOf(0f)
-    var newPointDeviation by mutableStateOf(Constants.DEVIATION)
-    var distanceToBase by mutableStateOf(0f)
+    var newRadius by mutableFloatStateOf(0f)
+    var newPointDeviation by mutableFloatStateOf(Constants.DEVIATION)
+    var distanceToBase by mutableFloatStateOf(0f)
     var newPointName by mutableStateOf("")
     private var newPointSpacePoint = SpacePoint(0f, 0f)
 
     // State of current point
-    var radius by mutableStateOf(0f)
+    var radius by mutableFloatStateOf(0f)
     var currentPointName by mutableStateOf("")
 
     // Details
     var readingsForShow by mutableStateOf(emptyMap<String, Float>())
-    var distance by mutableStateOf(0f)
+    var distance by mutableFloatStateOf(0f)
     var sensorsAccuracyStatus by mutableStateOf("")
 
     // UI state
@@ -64,8 +65,8 @@ class PoiViewerViewModel @Inject constructor(
     // Used for computation and point identification
     private var userPoints = emptyList<Poi>()
     var currentSpacePoint = SpacePoint(0f, 0f)
-    var correctionDistance by mutableStateOf(0f)
-    var correctionAzimuth by mutableStateOf(0f)
+    var correctionDistance by mutableFloatStateOf(0f)
+    private var correctionAzimuth by mutableFloatStateOf(0f)
 
     private fun setupOrientationSensor() {
         val cl: OrientationSensor.OrientationListener = getOrientationSensorListener()
@@ -247,7 +248,11 @@ class PoiViewerViewModel @Inject constructor(
         bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, newHeight.toInt(), false)
 
         resolver.openOutputStream(imageUri!!)
-            .use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            .use {
+                if (it != null) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                }
+            }
         Toast.makeText(appContext, "QR code saved", Toast.LENGTH_SHORT).show()
     }
 

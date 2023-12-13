@@ -12,9 +12,9 @@ import kotlin.math.sin
 
 class OrientationSensor(
     context: Context,
-    var alpha: Float = 0.99f,
-    var readingsBufferSize: Int = 100,
-    var useFilter: Boolean = true
+    private var alpha: Float = 0.99f,
+    private var readingsBufferSize: Int = 100,
+    private var useFilter: Boolean = true
 ) : SensorEventListener {
     interface OrientationListener {
         fun onNewOrientation(

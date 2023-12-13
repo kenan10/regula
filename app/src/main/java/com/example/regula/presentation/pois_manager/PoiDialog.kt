@@ -205,11 +205,11 @@ fun PoiDialog(
 class PoiDialogState {
     var advanced by mutableStateOf(false)
     var name by mutableStateOf("")
-    var azimuth by mutableStateOf(0f)
-    var pitch by mutableStateOf(0f)
-    var visualSize by mutableStateOf(0f)
-    var deviation by mutableStateOf(0f)
-    var distance by mutableStateOf(0f)
+    var azimuth by mutableFloatStateOf(0f)
+    var pitch by mutableFloatStateOf(0f)
+    var visualSize by mutableFloatStateOf(0f)
+    var deviation by mutableFloatStateOf(0f)
+    var distance by mutableFloatStateOf(0f)
 
     fun readPoi(poi: Poi) {
         this.name = poi.name

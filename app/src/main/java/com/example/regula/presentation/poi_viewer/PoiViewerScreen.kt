@@ -29,7 +29,6 @@ import com.example.regula.R
 import com.example.regula.presentation.common.PermissionsRequest
 import com.ramcosta.composedestinations.annotation.Destination
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Destination
 fun PoiViewerScreen(viewModel: PoiViewerViewModel = hiltViewModel()) {

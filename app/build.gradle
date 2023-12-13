@@ -1,20 +1,19 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
-    id 'com.google.dagger.hilt.android'
+    id 'com.google.dagger.hilt.android' version '2.49'
     id 'com.google.devtools.ksp'
-    id 'com.google.relay' version '0.3.04'
+    id 'com.google.relay' version '0.3.09'
 }
 
 android {
     namespace 'com.example.regula'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.regula"
         minSdk 29
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -42,7 +41,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.3.2'
+        kotlinCompilerExtensionVersion '1.5.6'
     }
     packagingOptions {
         resources {
@@ -50,7 +49,7 @@ android {
         }
     }
 
-    applicationVariants.all { variant ->
+    applicationVariants.configureEach { variant ->
         kotlin.sourceSets {
             getByName(variant.name) {
                 kotlin.srcDir("build/generated/ksp/${variant.name}/kotlin")
@@ -70,25 +69,24 @@ dependencies {
     implementation "com.google.accompanist:accompanist-permissions:0.21.1-beta"
 
     // ViewModel Compose
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
 
     // Dagger - Hilt
-    implementation "com.google.dagger:hilt-android:2.44"
-    kapt "com.google.dagger:hilt-android-compiler:2.44"
-    kapt "androidx.hilt:hilt-compiler:1.0.0"
-    implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
+    implementation "com.google.dagger:hilt-android:2.49"
+    ksp "com.google.dagger:hilt-android-compiler:2.49"
+    ksp "androidx.hilt:hilt-compiler:1.1.0"
+    implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
 
     // Ksp
-    implementation 'com.google.devtools.ksp:symbol-processing-api:1.7.21-1.0.8'
+    implementation 'com.google.devtools.ksp:symbol-processing-api:1.9.21-1.0.15'
 
     // Compose Navigator
-    implementation 'io.github.raamcosta.compose-destinations:core:1.7.27-beta'
-    ksp 'io.github.raamcosta.compose-destinations:ksp:1.7.27-beta'
+    implementation 'io.github.raamcosta.compose-destinations:core:1.9.55'
+    ksp 'io.github.raamcosta.compose-destinations:ksp:1.9.55'
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
 
     //barcode
@@ -103,11 +101,15 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
 
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.activity:activity-compose:1.6.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.activity:activity-compose:1.8.1'
 
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+hilt {
+    enableExperimentalClasspathAggregation = true
 }

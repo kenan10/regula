@@ -11,7 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PointsRepositoryImpl @Inject constructor(db: RegulaDatabase) :
+class PointsRepositoryImpl @Inject constructor(db: RegulaDatabase):
     PointsRepository {
     private val dao = db.dao
 
